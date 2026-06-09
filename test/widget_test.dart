@@ -1,30 +1,42 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:logic_nodes_mobile/core/routing/app_router.dart';
+import 'package:logic_nodes_mobile/core/routing/app_routes.dart';
+import 'package:logic_nodes_mobile/core/storage/memory_store.dart';
+import 'package:logic_nodes_mobile/features/auth/application/controllers/password_recovery_controller.dart';
+import 'package:logic_nodes_mobile/features/auth/application/controllers/register_controller.dart';
+import 'package:logic_nodes_mobile/features/auth/application/controllers/session_controller.dart';
+import 'package:logic_nodes_mobile/features/auth/application/use_cases/sign_in_use_case.dart';
+import 'package:logic_nodes_mobile/features/auth/data/datasources/mock_auth_datasource.dart';
+import 'package:logic_nodes_mobile/features/auth/data/repositories/mock_auth_repository.dart';
+import 'package:logic_nodes_mobile/features/auth/domain/entities/auth_session.dart';
 import 'package:logic_nodes_mobile/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('renders OmniTrack login flow', (tester) async {
+    final repository = MockAuthRepository(
+      datasource: MockAuthDatasource(),
+    );
+    final sessionController = SessionController(
+      sessionStore: MemoryStore<AuthSession>(),
+      authRepository: repository,
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      OmniTrackApp(
+        router: AppRouter(
+          initialRoute: AppRoutes.login,
+          signInUseCase: SignInUseCase(repository),
+          registerControllerFactory:
+              () => RegisterController(authRepository: repository),
+          passwordRecoveryControllerFactory:
+              () => PasswordRecoveryController(authRepository: repository),
+          sessionController: sessionController,
+        ),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('WELCOME'), findsOneWidget);
+    expect(find.text('Sign In'), findsOneWidget);
+    expect(find.text('Demo access'), findsOneWidget);
   });
 }
