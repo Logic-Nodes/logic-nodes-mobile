@@ -57,7 +57,7 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
           ),
           title: isRequest ? 'Password Recovery' : 'Create New Password',
           description: isRequest
-              ? 'Enter your email and OmniTrack will guide you through the reset flow.'
+              ? 'The current backend does not expose recovery yet. This screen stays available so the mobile flow remains aligned to the report.'
               : 'Set a new password to recover access to your account.',
           child: Form(
             key: isRequest ? _requestFormKey : _resetFormKey,

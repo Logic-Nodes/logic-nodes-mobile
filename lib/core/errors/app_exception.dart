@@ -10,3 +10,12 @@ class AppException implements Exception {
 class AuthException extends AppException {
   const AuthException(super.message);
 }
+
+class ApiException extends AppException {
+  const ApiException(
+    super.message, {
+    required this.statusCode,
+  });
+
+  final int statusCode;
+}

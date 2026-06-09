@@ -26,7 +26,7 @@ class PasswordRecoveryController extends ChangeNotifier {
       onSuccess: () {
         stage = PasswordRecoveryStage.reset;
         feedbackMessage =
-            'Recovery instructions sent. Create your new password to complete the demo flow.';
+            'Recovery instructions sent. Create your new password to continue.';
       },
     );
   }

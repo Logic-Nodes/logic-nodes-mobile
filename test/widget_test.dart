@@ -37,6 +37,6 @@ void main() {
 
     expect(find.text('WELCOME'), findsOneWidget);
     expect(find.text('Sign In'), findsOneWidget);
-    expect(find.text('Demo access'), findsOneWidget);
+    expect(find.text('Backend connection'), findsOneWidget);
   });
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/network/api_environment.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/utils/design_tokens.dart';
 import '../../application/controllers/login_controller.dart';
@@ -39,17 +40,8 @@ class _LoginScreenState extends State<LoginScreen> {
         return AuthScaffold(
           title: 'WELCOME',
           description:
-              'Monitor your fleet, shipments and incident response with a mobile flow aligned to the OmniTrack report.',
-          footer: _DemoAccessCard(
-            onFleetTap: () {
-              _emailController.text = 'fleet@omnitrack.io';
-              _passwordController.text = 'Fleet123!';
-            },
-            onClientTap: () {
-              _emailController.text = 'client@omnitrack.io';
-              _passwordController.text = 'Client123!';
-            },
-          ),
+              'Monitor your fleet, shipments and incident response with the real OmniTrack backend.',
+          footer: const _BackendConnectionCard(),
           child: Form(
             key: _formKey,
             child: Column(
@@ -58,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 AuthTextField(
                   controller: _emailController,
                   label: 'Email address',
-                  hintText: 'fleet@omnitrack.io',
+                  hintText: 'name@company.com',
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   prefixIcon: Icons.alternate_email_rounded,
@@ -222,13 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
 }
 
 class _DemoAccessCard extends StatelessWidget {
-  const _DemoAccessCard({
-    required this.onFleetTap,
-    required this.onClientTap,
-  });
-
-  final VoidCallback onFleetTap;
-  final VoidCallback onClientTap;
+  const _DemoAccessCard();
 
   @override
   Widget build(BuildContext context) {
@@ -244,30 +230,40 @@ class _DemoAccessCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Demo access',
+            'Backend connection',
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Use one of the report-aligned roles while the mobile app is still disconnected from the real IAM backend.',
+            'API base URL: ${ApiEnvironment.baseUrl}',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Swagger UI: ${ApiEnvironment.docsUrl}',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: AppSpacing.md),
-          OutlinedButton.icon(
-            onPressed: onFleetTap,
-            icon: const Icon(Icons.local_shipping_outlined),
-            label: const Text('Fleet Manager Demo'),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          OutlinedButton.icon(
-            onPressed: onClientTap,
-            icon: const Icon(Icons.inventory_2_outlined),
-            label: const Text('Customer Demo'),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(AppSpacing.md),
+              child: Text(
+                'Use Sign up to create a real account in the existing backend. For Android emulator the default URL is 10.0.2.2:3000.',
+              ),
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+class _BackendConnectionCard extends _DemoAccessCard {
+  const _BackendConnectionCard();
 }
 
 class _FeedbackBanner extends StatelessWidget {

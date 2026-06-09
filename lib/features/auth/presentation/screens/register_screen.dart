@@ -163,6 +163,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         AuthTextField(
           controller: _companyContactEmailController,
           label: 'Company contact email',
+          hintText: 'operations@company.com',
           keyboardType: TextInputType.emailAddress,
           validator: _requiredEmail,
         ),
@@ -173,6 +174,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: AuthTextField(
                 controller: _legalNameController,
                 label: 'Legal name',
+                hintText: 'North Coast Logistics SAC',
                 validator: _requiredText,
               ),
             ),
@@ -180,7 +182,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Expanded(
               child: AuthTextField(
                 controller: _taxIdController,
-                label: 'ID',
+                label: 'RUC',
+                hintText: '20604567891',
                 validator: _requiredText,
               ),
             ),
@@ -190,6 +193,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         AuthTextField(
           controller: _fiscalAddressController,
           label: 'Fiscal address',
+          hintText: 'Av. Javier Prado 2450, Lima',
           validator: _requiredText,
         ),
         const SizedBox(height: AppSpacing.md),
@@ -201,6 +205,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: AuthTextField(
                 controller: _adminFirstNameController,
                 label: 'First name',
+                hintText: 'Adrian',
                 validator: _requiredText,
               ),
             ),
@@ -209,6 +214,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: AuthTextField(
                 controller: _adminLastNameController,
                 label: 'Last name',
+                hintText: 'Valerio',
                 validator: _requiredText,
               ),
             ),
@@ -220,6 +226,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         AuthTextField(
           controller: _adminEmailController,
           label: 'Email address',
+          hintText: 'admin@company.com',
           keyboardType: TextInputType.emailAddress,
           validator: _requiredEmail,
         ),
@@ -227,6 +234,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         AuthTextField(
           controller: _companyPasswordController,
           label: 'Password',
+          hintText: 'At least 8 characters',
           obscureText: true,
           validator: _requiredPassword,
         ),
@@ -256,6 +264,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: AuthTextField(
                 controller: _firstNameController,
                 label: 'First name',
+                hintText: 'Ana',
                 validator: _requiredText,
               ),
             ),
@@ -264,6 +273,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: AuthTextField(
                 controller: _lastNameController,
                 label: 'Last name',
+                hintText: 'Torres',
                 validator: _requiredText,
               ),
             ),
@@ -275,6 +285,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         AuthTextField(
           controller: _clientEmailController,
           label: 'Email address',
+          hintText: 'client@company.com',
           keyboardType: TextInputType.emailAddress,
           validator: _requiredEmail,
         ),
@@ -282,6 +293,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         AuthTextField(
           controller: _clientPasswordController,
           label: 'Password',
+          hintText: 'At least 8 characters',
           obscureText: true,
           validator: _requiredPassword,
         ),
