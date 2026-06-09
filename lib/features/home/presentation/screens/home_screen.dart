@@ -7,13 +7,17 @@ import '../../../../core/utils/omnitrack_logo.dart';
 import '../../../auth/application/controllers/session_controller.dart';
 import '../../../auth/domain/entities/auth_session.dart';
 import '../../../auth/domain/entities/auth_user.dart';
+import '../../application/controllers/home_controller.dart';
+import '../../domain/entities/home_dashboard.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
+    required this.controller,
     required this.sessionController,
     super.key,
   });
 
+  final HomeController controller;
   final SessionController sessionController;
 
   @override
@@ -22,6 +26,18 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.load();
+  }
+
+  @override
+  void dispose() {
+    widget.controller.dispose();
+    super.dispose();
+  }
 
   Future<void> _signOut() async {
     await widget.sessionController.signOut();
@@ -80,6 +96,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
+            tooltip: 'Refresh',
+            onPressed: widget.controller.isLoading ? null : widget.controller.load,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+          IconButton(
             tooltip: 'Sign out',
             onPressed: _signOut,
             icon: const Icon(Icons.logout_rounded),
@@ -105,19 +126,50 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: SafeArea(
           top: false,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 260),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            child: KeyedSubtree(
-              key: ValueKey<_HomeTab>(activeDestination.tab),
-              child: _buildTabContent(
-                context,
-                session: session!,
-                user: user,
-                tab: activeDestination.tab,
-              ),
-            ),
+          child: AnimatedBuilder(
+            animation: widget.controller,
+            builder: (context, _) {
+              final dashboard = widget.controller.dashboard;
+
+              if (dashboard == null) {
+                if (widget.controller.isLoading) {
+                  return const _LoadingState();
+                }
+
+                return _ErrorState(
+                  message: widget.controller.errorMessage ??
+                      'No workspace data is available yet for the current account.',
+                  onRetry: widget.controller.load,
+                );
+              }
+
+              return Stack(
+                children: [
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 260),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    child: KeyedSubtree(
+                      key: ValueKey<String>(
+                        '${activeDestination.tab.name}-${dashboard.loadedAt.toIso8601String()}',
+                      ),
+                      child: _buildTabContent(
+                        context,
+                        session: session!,
+                        user: user,
+                        dashboard: dashboard,
+                        tab: activeDestination.tab,
+                      ),
+                    ),
+                  ),
+                  if (widget.controller.isLoading)
+                    const Align(
+                      alignment: Alignment.topCenter,
+                      child: LinearProgressIndicator(minHeight: 2),
+                    ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -146,30 +198,44 @@ class _HomeScreenState extends State<HomeScreen> {
     BuildContext context, {
     required AuthSession session,
     required AuthUser user,
+    required HomeDashboard dashboard,
     required _HomeTab tab,
   }) {
     return switch (tab) {
-      _HomeTab.overview => _buildOverviewTab(context, user),
-      _HomeTab.operations => _buildOperationsTab(context, user),
-      _HomeTab.alerts => _buildAlertsTab(context, user),
-      _HomeTab.billing => _buildBillingTab(context, user),
-      _HomeTab.account => _buildAccountTab(context, session: session, user: user),
+      _HomeTab.overview => _buildOverviewTab(context, user, dashboard),
+      _HomeTab.operations => _buildOperationsTab(context, user, dashboard),
+      _HomeTab.alerts => _buildAlertsTab(context, dashboard),
+      _HomeTab.billing => _buildBillingTab(context, user, dashboard),
+      _HomeTab.account => _buildAccountTab(
+          context,
+          session: session,
+          user: user,
+          dashboard: dashboard,
+        ),
     };
   }
 
-  Widget _buildOverviewTab(BuildContext context, AuthUser user) {
-    final focusItems = _focusItemsFor(user.role);
+  Widget _buildOverviewTab(
+    BuildContext context,
+    AuthUser user,
+    HomeDashboard dashboard,
+  ) {
+    final focusItems = _focusItemsFor(user.role, dashboard);
     final modules = _modulesFor(user.role);
 
     return _ScrollablePage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (dashboard.scopeNotice != null) ...[
+            _ScopeNoticeCard(message: dashboard.scopeNotice!),
+            const SizedBox(height: AppSpacing.md),
+          ],
           _WorkspaceHero(
             title: 'Hola, ${user.name.split(' ').first}',
             description: user.role == UserRole.fleetManager
-                ? 'Controla flota, cumplimiento de cadena de frio y respuesta operativa desde una sola vista.'
-                : 'Sigue tus envios, revisa alertas y mantente al tanto del plan contratado.',
+                ? 'Controla flota, viajes, alertas y monitoreo desde una sola vista conectada al backend real.'
+                : 'Sigue tus envios, alertas y estado del workspace desde datos reales del backend.',
             roleLabel: user.role.label,
             companyLabel: user.companyName,
           ),
@@ -177,15 +243,15 @@ class _HomeScreenState extends State<HomeScreen> {
           _SectionHeading(
             title: 'Operational Snapshot',
             description: user.role == UserRole.fleetManager
-                ? 'Indicadores del turno con foco en visibilidad y cumplimiento.'
-                : 'Resumen rapido del estado actual de tus envios y servicio.',
+                ? 'Indicadores construidos con viajes, dispositivos y alertas visibles.'
+                : 'Resumen construido con viajes, ordenes y alertas asociadas a tu cuenta.',
           ),
           const SizedBox(height: AppSpacing.md),
-          _MetricGrid(metrics: _metricsFor(user.role)),
+          _MetricGrid(metrics: _metricsFor(user.role, dashboard)),
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
             title: 'Focus Today',
-            description: 'Tareas y puntos de atencion ordenados por impacto.',
+            description: 'Puntos de atencion calculados desde el estado actual del backend.',
           ),
           const SizedBox(height: AppSpacing.md),
           for (final item in focusItems) ...[
@@ -214,10 +280,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildOperationsTab(BuildContext context, AuthUser user) {
-    final cards = _routeCardsFor(user.role);
-    final events = _timelineFor(user.role);
-    final highlightStats = _operationsStatsFor(user.role);
+  Widget _buildOperationsTab(
+    BuildContext context,
+    AuthUser user,
+    HomeDashboard dashboard,
+  ) {
+    final cards = _routeCardsFor(user.role, dashboard);
+    final events = _timelineFor(user.role, dashboard);
+    final stats = _operationsStatsFor(user.role, dashboard);
 
     return _ScrollablePage(
       child: Column(
@@ -228,8 +298,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ? 'Live Operations'
                 : 'Shipment Progress',
             description: user.role == UserRole.fleetManager
-                ? 'Seguimiento de rutas activas, disponibilidad y control de temperatura.'
-                : 'Seguimiento de pedidos activos, hitos y proximos puntos de entrega.',
+                ? 'Seguimiento real de rutas, dispositivos y sesiones activas.'
+                : 'Seguimiento real de los viajes y ordenes vinculadas a tu cuenta.',
             accent: user.role == UserRole.fleetManager
                 ? AppColors.primary
                 : AppColors.secondary,
@@ -242,9 +312,7 @@ class _HomeScreenState extends State<HomeScreen> {
             title: user.role == UserRole.fleetManager
                 ? 'Routes In Motion'
                 : 'Visible Shipments',
-            description: user.role == UserRole.fleetManager
-                ? 'Viajes con telemetria activa y estado consolidado.'
-                : 'Pedidos activos con lectura de ruta y condicion actual.',
+            description: 'Tarjetas alimentadas con los viajes retornados por la API.',
           ),
           const SizedBox(height: AppSpacing.md),
           for (final card in cards) ...[
@@ -254,21 +322,20 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
             title: 'Readiness Board',
-            description: 'Capacidad operativa inmediata para el siguiente bloque.',
+            description: 'Estadisticas operativas derivadas del backend visible.',
           ),
           const SizedBox(height: AppSpacing.md),
           Wrap(
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
             children: [
-              for (final stat in highlightStats)
-                _MiniStatCard(stat: stat),
+              for (final stat in stats) _MiniStatCard(stat: stat),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
             title: 'Recent Activity',
-            description: 'Eventos recientes del flujo visibles para el usuario actual.',
+            description: 'Eventos recientes deducidos de viajes y alertas.',
           ),
           const SizedBox(height: AppSpacing.md),
           Card(
@@ -293,9 +360,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildAlertsTab(BuildContext context, AuthUser user) {
-    final alerts = _alertsFor(user.role);
-    final summary = _alertSummaryFor(user.role);
+  Widget _buildAlertsTab(BuildContext context, HomeDashboard dashboard) {
+    final alerts = _alertsFor(dashboard);
+    final summary = _alertSummaryFor(dashboard);
 
     return _ScrollablePage(
       child: Column(
@@ -303,22 +370,21 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _InfoBanner(
             title: 'Response Center',
-            description: 'Alertas agrupadas por severidad para priorizar accion inmediata.',
+            description: 'Alertas agrupadas con base en la respuesta real del backend.',
             accent: AppColors.warning,
             icon: Icons.warning_amber_rounded,
           ),
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
             title: 'Alert Pipeline',
-            description: 'Lectura operativa de criticidad, seguimiento y respuesta.',
+            description: 'Lectura operativa de criticidad, seguimiento y cierre.',
           ),
           const SizedBox(height: AppSpacing.md),
           Wrap(
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
             children: [
-              for (final item in summary)
-                _MiniStatCard(stat: item),
+              for (final stat in summary) _MiniStatCard(stat: stat),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -329,7 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
             title: 'Immediate Actions',
-            description: 'Siguientes pasos recomendados con base en el estado actual.',
+            description: 'Acciones sugeridas segun las entidades que hoy devuelve el backend.',
           ),
           const SizedBox(height: AppSpacing.md),
           Card(
@@ -339,17 +405,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   _ChecklistTile(
                     icon: Icons.thermostat_rounded,
-                    title: 'Validar rango de temperatura en los vehiculos con alerta abierta.',
+                    title:
+                        'Validar las alertas abiertas y su orden de entrega asociada antes del siguiente movimiento.',
                   ),
                   const Divider(height: AppSpacing.lg),
                   _ChecklistTile(
                     icon: Icons.support_agent_rounded,
-                    title: 'Notificar al responsable operativo antes del siguiente despacho.',
+                    title:
+                        'Confirmar si las alertas reconocidas fueron efectivamente atendidas en operacion.',
                   ),
                   const Divider(height: AppSpacing.lg),
                   _ChecklistTile(
                     icon: Icons.fact_check_outlined,
-                    title: 'Registrar evidencia y cierre para trazabilidad del incidente.',
+                    title:
+                        'Cerrar solo las alertas con evidencia trazable para mantener el flujo consistente.',
                   ),
                 ],
               ),
@@ -360,9 +429,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBillingTab(BuildContext context, AuthUser user) {
-    final invoices = _billingRows();
-    final usageStats = _billingUsageStats();
+  Widget _buildBillingTab(
+    BuildContext context,
+    AuthUser user,
+    HomeDashboard dashboard,
+  ) {
+    final usageStats = _billingUsageStats(dashboard);
 
     return _ScrollablePage(
       child: Column(
@@ -370,9 +442,10 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _WorkspaceHero(
             title: 'Billing & Plan',
-            description: 'Estado del plan, renovaciones y documentos de cobro asociados a la cuenta.',
+            description:
+                'Vista de estado del modulo de billing desde la perspectiva del backend actual.',
             roleLabel: user.role.label,
-            companyLabel: user.companyName ?? 'Customer workspace',
+            companyLabel: user.companyName ?? 'Personal workspace',
           ),
           const SizedBox(height: AppSpacing.lg),
           Card(
@@ -391,7 +464,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(AppRadius.sm),
                         ),
                         child: const Icon(
-                          Icons.workspace_premium_rounded,
+                          Icons.sync_problem_rounded,
                           color: AppColors.secondary,
                         ),
                       ),
@@ -401,12 +474,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'OmniTrack Monitoring Pro',
+                              'Billing backend not exposed',
                               style: Theme.of(context).textTheme.titleLarge,
                             ),
                             const SizedBox(height: AppSpacing.xxs),
                             Text(
-                              'Facturacion mensual con seguimiento en tiempo real y soporte operativo.',
+                              'El backend actual no publica endpoints de suscripcion, renovacion ni facturas. Esta vista evita mostrar datos inventados.',
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ],
@@ -419,20 +492,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Expanded(
                         child: _KeyValueItem(
-                          label: 'Status',
-                          value: 'Active',
+                          label: 'Module status',
+                          value: 'Unavailable',
                         ),
                       ),
                       Expanded(
                         child: _KeyValueItem(
-                          label: 'Renewal',
-                          value: 'Jun 28',
+                          label: 'Source',
+                          value: 'Current backend',
                         ),
                       ),
                       Expanded(
                         child: _KeyValueItem(
-                          label: 'Next charge',
-                          value: 'USD 149',
+                          label: 'Fallback',
+                          value: 'Usage only',
                         ),
                       ),
                     ],
@@ -444,33 +517,44 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
             title: 'Usage Snapshot',
-            description: 'Consumo visible para el ciclo de facturacion actual.',
+            description: 'Consumo real que si puede medirse con el backend disponible.',
           ),
           const SizedBox(height: AppSpacing.md),
           Wrap(
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
             children: [
-              for (final stat in usageStats)
-                _MiniStatCard(stat: stat),
+              for (final stat in usageStats) _MiniStatCard(stat: stat),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
-            title: 'Recent Invoices',
-            description: 'Ultimos comprobantes y estado de pago.',
+            title: 'Available Data',
+            description: 'Lo que si puede visualizar hoy esta pantalla desde la API.',
           ),
           const SizedBox(height: AppSpacing.md),
           Card(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: Column(
                 children: [
-                  for (int index = 0; index < invoices.length; index++) ...[
-                    _InvoiceTile(invoice: invoices[index]),
-                    if (index != invoices.length - 1)
-                      const Divider(height: 1, indent: AppSpacing.md, endIndent: AppSpacing.md),
-                  ],
+                  _ChecklistTile(
+                    icon: Icons.route_outlined,
+                    title:
+                        'Trips, ordenes de entrega y alertas si se leen desde el backend real.',
+                  ),
+                  const Divider(height: AppSpacing.lg),
+                  _ChecklistTile(
+                    icon: Icons.sensors_outlined,
+                    title:
+                        'Vehiculos, dispositivos y sesiones activas alimentan el resumen operativo.',
+                  ),
+                  const Divider(height: AppSpacing.lg),
+                  _ChecklistTile(
+                    icon: Icons.info_outline_rounded,
+                    title:
+                        'Facturacion y suscripciones quedan pendientes hasta que el backend exponga ese modulo.',
+                  ),
                 ],
               ),
             ),
@@ -484,6 +568,7 @@ class _HomeScreenState extends State<HomeScreen> {
     BuildContext context, {
     required AuthSession session,
     required AuthUser user,
+    required HomeDashboard dashboard,
   }) {
     final modules = _modulesFor(user.role);
 
@@ -541,7 +626,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
             title: 'Session Details',
-            description: 'Datos visibles de la conexion actual y alcance de acceso.',
+            description: 'Datos visibles de la conexion actual y del ultimo sync.',
           ),
           const SizedBox(height: AppSpacing.md),
           Card(
@@ -568,6 +653,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     label: 'Workspace',
                     value: user.companyName ?? 'Personal account',
                   ),
+                  const Divider(height: AppSpacing.lg),
+                  _DetailRow(
+                    label: 'Last sync',
+                    value: _formatDateTime(dashboard.loadedAt),
+                  ),
                 ],
               ),
             ),
@@ -575,7 +665,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
             title: 'Enabled Modules',
-            description: 'Secciones visibles actualmente para este perfil.',
+            description: 'Secciones disponibles actualmente para este perfil.',
           ),
           const SizedBox(height: AppSpacing.md),
           for (final module in modules) ...[
@@ -632,7 +722,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _HomeDestination(
             tab: _HomeTab.alerts,
             label: 'Alerts',
-            subtitle: 'Critical incidents and actions',
+            subtitle: 'Incidents and response',
             icon: Icons.notifications_active_outlined,
             selectedIcon: Icons.notifications_active_rounded,
           ),
@@ -663,7 +753,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _HomeDestination(
             tab: _HomeTab.billing,
             label: 'Billing',
-            subtitle: 'Plan and invoices',
+            subtitle: 'Module status',
             icon: Icons.receipt_long_outlined,
             selectedIcon: Icons.receipt_long_rounded,
           ),
@@ -709,7 +799,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           _HomeModule(
             label: 'Billing',
-            description: 'Plan contratado y facturacion del servicio.',
+            description: 'Estado del modulo de billing.',
             icon: Icons.receipt_long_outlined,
           ),
         ];
@@ -727,7 +817,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           _HomeModule(
             label: 'Billing',
-            description: 'Plan, renovaciones y comprobantes.',
+            description: 'Estado del modulo de facturacion.',
             icon: Icons.receipt_long_outlined,
           ),
           _HomeModule(
@@ -739,211 +829,224 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  List<_MetricCardData> _metricsFor(UserRole role) {
+  List<_MetricCardData> _metricsFor(UserRole role, HomeDashboard dashboard) {
     switch (role) {
       case UserRole.fleetManager:
-        return const [
+        return [
           _MetricCardData(
-            label: 'Vehicles Online',
-            value: '24',
-            description: 'Unidades conectadas a telemetria.',
+            label: 'Visible Vehicles',
+            value: '${dashboard.totalVehicles}',
+            description: 'Vehiculos obtenidos desde el backend actual.',
             icon: Icons.local_shipping_outlined,
             accent: AppColors.primary,
           ),
           _MetricCardData(
             label: 'Active Trips',
-            value: '8',
-            description: 'Rutas en progreso con monitoreo activo.',
+            value: '${dashboard.activeTrips}',
+            description: 'Rutas en progreso dentro del alcance visible.',
             icon: Icons.route_outlined,
             accent: AppColors.secondary,
           ),
           _MetricCardData(
             label: 'Open Alerts',
-            value: '3',
-            description: 'Eventos que requieren seguimiento.',
+            value: '${dashboard.openAlerts + dashboard.acknowledgedAlerts}',
+            description: 'Alertas abiertas o reconocidas pendientes.',
             icon: Icons.warning_amber_rounded,
             accent: AppColors.warning,
           ),
           _MetricCardData(
-            label: 'Compliance',
-            value: '97%',
-            description: 'Cumplimiento del rango de frio hoy.',
-            icon: Icons.verified_outlined,
+            label: 'Live Sessions',
+            value: '${dashboard.activeSessions.length}',
+            description: 'Sesiones activas de monitoreo detectadas.',
+            icon: Icons.radar_outlined,
             accent: AppColors.success,
           ),
         ];
       case UserRole.customer:
-        return const [
+        return [
           _MetricCardData(
             label: 'Tracked Trips',
-            value: '2',
-            description: 'Envios visibles en tiempo real.',
+            value: '${dashboard.totalTrips}',
+            description: 'Envios vinculados a tu correo.',
             icon: Icons.route_outlined,
             accent: AppColors.primary,
           ),
           _MetricCardData(
-            label: 'Stable Temp',
-            value: '99%',
-            description: 'Lecturas dentro del umbral esperado.',
-            icon: Icons.thermostat_outlined,
-            accent: AppColors.success,
+            label: 'Delivery Orders',
+            value: '${dashboard.totalDeliveryOrders}',
+            description: 'Ordenes visibles para tu cuenta.',
+            icon: Icons.inventory_2_outlined,
+            accent: AppColors.secondary,
           ),
           _MetricCardData(
             label: 'Open Alerts',
-            value: '1',
-            description: 'Incidente en seguimiento compartido.',
+            value: '${dashboard.openAlerts + dashboard.acknowledgedAlerts}',
+            description: 'Alertas activas en tus envios.',
             icon: Icons.notification_important_outlined,
             accent: AppColors.warning,
           ),
           _MetricCardData(
-            label: 'Plan Status',
-            value: 'Active',
-            description: 'Cuenta lista para el siguiente ciclo.',
-            icon: Icons.workspace_premium_outlined,
-            accent: AppColors.secondary,
-          ),
-        ];
-    }
-  }
-
-  List<_FocusCardData> _focusItemsFor(UserRole role) {
-    switch (role) {
-      case UserRole.fleetManager:
-        return const [
-          _FocusCardData(
-            title: 'Dispatch 04 leaves in 18 minutes',
-            description: 'Validar que el sensor de temperatura del vehiculo V-18 mantenga rango estable antes de la salida.',
-            icon: Icons.schedule_rounded,
-            accent: AppColors.primary,
-          ),
-          _FocusCardData(
-            title: '2 devices pending battery replacement',
-            description: 'La visibilidad de telemetria podria degradarse si no se atiende en este turno.',
-            icon: Icons.battery_alert_rounded,
-            accent: AppColors.warning,
-          ),
-          _FocusCardData(
-            title: 'Warehouse North still needs driver confirmation',
-            description: 'Completar la asignacion para no afectar la ventana de entrega de la tarde.',
-            icon: Icons.assignment_ind_outlined,
-            accent: AppColors.secondary,
-          ),
-        ];
-      case UserRole.customer:
-        return const [
-          _FocusCardData(
-            title: 'Shipment LN-302 is entering delivery geofence',
-            description: 'La unidad se encuentra en el tramo final y deberia completar entrega dentro del horario previsto.',
-            icon: Icons.location_searching_rounded,
-            accent: AppColors.primary,
-          ),
-          _FocusCardData(
-            title: 'No temperature deviations in the last 6 hours',
-            description: 'La cadena de frio se mantiene estable en los envios activos monitoreados.',
-            icon: Icons.check_circle_outline_rounded,
-            accent: AppColors.success,
-          ),
-          _FocusCardData(
-            title: 'Subscription renewal opens in 4 days',
-            description: 'Revisa el estado del plan y los comprobantes disponibles antes del corte.',
-            icon: Icons.receipt_long_outlined,
-            accent: AppColors.secondary,
-          ),
-        ];
-    }
-  }
-
-  List<_ProgressCardData> _routeCardsFor(UserRole role) {
-    switch (role) {
-      case UserRole.fleetManager:
-        return const [
-          _ProgressCardData(
-            title: 'Trip LN-204 / North Hub',
-            subtitle: 'Van V-18 • Driver: Valeria Paredes',
-            progress: 0.72,
-            trailingLabel: 'ETA 12:40',
-            tag: 'Cold chain stable',
-            accent: AppColors.primary,
-          ),
-          _ProgressCardData(
-            title: 'Trip LN-221 / Central Loop',
-            subtitle: 'Truck T-04 • Driver: Luis Marquez',
-            progress: 0.46,
-            trailingLabel: 'ETA 13:05',
-            tag: '1 alert acknowledged',
-            accent: AppColors.warning,
-          ),
-          _ProgressCardData(
-            title: 'Trip LN-228 / South Route',
-            subtitle: 'Truck T-11 • Driver: Carla Nunez',
-            progress: 0.83,
-            trailingLabel: 'ETA 12:12',
-            tag: 'On-time',
-            accent: AppColors.success,
-          ),
-        ];
-      case UserRole.customer:
-        return const [
-          _ProgressCardData(
-            title: 'Order LN-302',
-            subtitle: 'Route to Miraflores • Device IMEI 9842',
-            progress: 0.81,
-            trailingLabel: 'ETA 11:55',
-            tag: '2.8°C stable',
-            accent: AppColors.primary,
-          ),
-          _ProgressCardData(
-            title: 'Order LN-318',
-            subtitle: 'Route to San Isidro • Device IMEI 7621',
-            progress: 0.58,
-            trailingLabel: 'ETA 13:20',
-            tag: 'Checkpoint reached',
-            accent: AppColors.secondary,
-          ),
-        ];
-    }
-  }
-
-  List<_MiniStatData> _operationsStatsFor(UserRole role) {
-    switch (role) {
-      case UserRole.fleetManager:
-        return const [
-          _MiniStatData(
-            label: 'Ready Units',
-            value: '14',
-            icon: Icons.inventory_2_outlined,
-            accent: AppColors.primary,
-          ),
-          _MiniStatData(
-            label: 'Drivers On Shift',
-            value: '11',
-            icon: Icons.badge_outlined,
-            accent: AppColors.secondary,
-          ),
-          _MiniStatData(
-            label: 'Sensors Healthy',
-            value: '96%',
+            label: 'Live Sessions',
+            value: '${dashboard.activeSessions.length}',
+            description: 'Sesiones activas asociadas a tus viajes.',
             icon: Icons.sensors_outlined,
             accent: AppColors.success,
           ),
         ];
+    }
+  }
+
+  List<_FocusCardData> _focusItemsFor(
+    UserRole role,
+    HomeDashboard dashboard,
+  ) {
+    switch (role) {
+      case UserRole.fleetManager:
+        return [
+          _FocusCardData(
+            title: '${dashboard.activeTrips} active trips need review',
+            description:
+                'El backend reporta ${dashboard.activeSessions.length} sesiones activas y ${dashboard.plannedTrips} rutas aun planificadas.',
+            icon: Icons.schedule_rounded,
+            accent: AppColors.primary,
+          ),
+          _FocusCardData(
+            title:
+                '${dashboard.openAlerts + dashboard.acknowledgedAlerts} alerts remain in queue',
+            description:
+                'Las alertas visibles incluyen ${dashboard.openAlerts} abiertas y ${dashboard.acknowledgedAlerts} reconocidas.',
+            icon: Icons.warning_amber_rounded,
+            accent: AppColors.warning,
+          ),
+          _FocusCardData(
+            title: '${dashboard.onlineDevices} devices are online right now',
+            description:
+                'El inventario visible tiene ${dashboard.totalVehicles} vehiculos y ${dashboard.offlineDevices} dispositivos sin conexion.',
+            icon: Icons.sensors_outlined,
+            accent: AppColors.secondary,
+          ),
+        ];
       case UserRole.customer:
-        return const [
+        return [
+          _FocusCardData(
+            title: '${dashboard.totalTrips} tracked trips matched your email',
+            description:
+                'La app encontro ${dashboard.totalDeliveryOrders} delivery orders relacionados con tu cuenta.',
+            icon: Icons.location_searching_rounded,
+            accent: AppColors.primary,
+          ),
+          _FocusCardData(
+            title:
+                '${dashboard.deliveredOrders}/${dashboard.totalDeliveryOrders} milestones completed',
+            description:
+                'Puedes ver ${dashboard.pendingOrders} pedidos pendientes y ${dashboard.failedOrders} fallidos.',
+            icon: Icons.check_circle_outline_rounded,
+            accent: AppColors.success,
+          ),
+          _FocusCardData(
+            title:
+                '${dashboard.openAlerts + dashboard.acknowledgedAlerts} alerts need follow-up',
+            description:
+                'Las alertas se muestran filtradas segun las ordenes de entrega vinculadas a tu cuenta.',
+            icon: Icons.notifications_active_outlined,
+            accent: AppColors.secondary,
+          ),
+        ];
+    }
+  }
+
+  List<_ProgressCardData> _routeCardsFor(
+    UserRole role,
+    HomeDashboard dashboard,
+  ) {
+    final trips = [...dashboard.trips]
+      ..sort(
+        (left, right) => (right.lastActivityAt ?? dashboard.loadedAt)
+            .compareTo(left.lastActivityAt ?? dashboard.loadedAt),
+      );
+
+    if (trips.isEmpty) {
+      return [
+        _ProgressCardData(
+          title: role == UserRole.fleetManager
+              ? 'No trips available yet'
+              : 'No tracked shipments yet',
+          subtitle:
+              'When the backend has trips for this workspace they will appear here automatically.',
+          progress: 0,
+          trailingLabel: 'Waiting',
+          tag: 'Backend ready',
+          accent: AppColors.secondary,
+        ),
+      ];
+    }
+
+    return trips.take(3).map((trip) {
+      final vehicleLabel = _vehicleLabel(dashboard, trip.vehicleId);
+      final order = role == UserRole.customer && trip.deliveryOrders.isNotEmpty
+          ? trip.deliveryOrders.first
+          : null;
+
+      return _ProgressCardData(
+        title: role == UserRole.fleetManager
+            ? 'Trip #${trip.id}${trip.originPointName != null ? ' / ${trip.originPointName}' : ''}'
+            : 'Order #${order?.id ?? trip.id}',
+        subtitle: role == UserRole.fleetManager
+            ? '$vehicleLabel | ${_statusLabel(trip.status)}'
+            : '${trip.deliveryOrders.length} orders | $vehicleLabel',
+        progress: trip.completionProgress,
+        trailingLabel: _statusLabel(trip.status),
+        tag: trip.deliveryOrders.isEmpty
+            ? 'No delivery orders'
+            : '${trip.deliveredOrders}/${trip.deliveryOrders.length} delivered',
+        accent: _statusAccent(trip.status),
+      );
+    }).toList(growable: false);
+  }
+
+  List<_MiniStatData> _operationsStatsFor(
+    UserRole role,
+    HomeDashboard dashboard,
+  ) {
+    switch (role) {
+      case UserRole.fleetManager:
+        return [
           _MiniStatData(
-            label: 'Upcoming Stops',
-            value: '3',
+            label: 'Vehicles',
+            value: '${dashboard.totalVehicles}',
+            icon: Icons.inventory_2_outlined,
+            accent: AppColors.primary,
+          ),
+          _MiniStatData(
+            label: 'Online Devices',
+            value: '${dashboard.onlineDevices}',
+            icon: Icons.sensors_outlined,
+            accent: AppColors.secondary,
+          ),
+          _MiniStatData(
+            label: 'Active Sessions',
+            value: '${dashboard.activeSessions.length}',
+            icon: Icons.radar_outlined,
+            accent: AppColors.success,
+          ),
+        ];
+      case UserRole.customer:
+        return [
+          _MiniStatData(
+            label: 'Orders',
+            value: '${dashboard.totalDeliveryOrders}',
             icon: Icons.flag_outlined,
             accent: AppColors.primary,
           ),
           _MiniStatData(
-            label: 'Shared Contacts',
-            value: '2',
-            icon: Icons.groups_outlined,
+            label: 'Delivered',
+            value: '${dashboard.deliveredOrders}',
+            icon: Icons.task_alt_rounded,
             accent: AppColors.secondary,
           ),
           _MiniStatData(
-            label: 'Alert SLA',
-            value: '< 5m',
+            label: 'Live Sessions',
+            value: '${dashboard.activeSessions.length}',
             icon: Icons.timer_outlined,
             accent: AppColors.success,
           ),
@@ -951,193 +1054,238 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  List<_TimelineEvent> _timelineFor(UserRole role) {
-    switch (role) {
-      case UserRole.fleetManager:
-        return const [
-          _TimelineEvent(
-            time: '10:12',
-            title: 'Vehicle V-18 left Warehouse North',
-            description: 'Monitoreo iniciado con telemetria disponible.',
-            accent: AppColors.primary,
-          ),
-          _TimelineEvent(
-            time: '10:28',
-            title: 'Alert acknowledged on Trip LN-221',
-            description: 'Temperatura corregida y seguimiento en curso.',
-            accent: AppColors.warning,
-          ),
-          _TimelineEvent(
-            time: '10:41',
-            title: 'Device IMEI 7621 synced successfully',
-            description: 'Buffer de eventos subido sin perdida de lecturas.',
-            accent: AppColors.success,
-          ),
-        ];
-      case UserRole.customer:
-        return const [
-          _TimelineEvent(
-            time: '09:54',
-            title: 'Order LN-302 entered route midpoint',
-            description: 'La unidad mantiene velocidad y temperatura esperadas.',
-            accent: AppColors.primary,
-          ),
-          _TimelineEvent(
-            time: '10:07',
-            title: 'Checkpoint signed by operator',
-            description: 'Se confirmo el tramo siguiente del envio compartido.',
-            accent: AppColors.secondary,
-          ),
-          _TimelineEvent(
-            time: '10:39',
-            title: 'Delivery window remains on schedule',
-            description: 'No hay alertas nuevas que afecten la entrega.',
-            accent: AppColors.success,
-          ),
-        ];
+  List<_TimelineEvent> _timelineFor(UserRole role, HomeDashboard dashboard) {
+    final events = <_TimelineEvent>[];
+
+    final trips = [...dashboard.trips]
+      ..sort(
+        (left, right) => (right.lastActivityAt ?? dashboard.loadedAt)
+            .compareTo(left.lastActivityAt ?? dashboard.loadedAt),
+      );
+    final alerts = [...dashboard.alerts]
+      ..sort(
+        (left, right) => (right.lastActivityAt ?? dashboard.loadedAt)
+            .compareTo(left.lastActivityAt ?? dashboard.loadedAt),
+      );
+
+    for (final trip in trips.take(2)) {
+      final time = trip.lastActivityAt ?? dashboard.loadedAt;
+      events.add(
+        _TimelineEvent(
+          time: _formatHourMinute(time),
+          title: role == UserRole.fleetManager
+              ? 'Trip #${trip.id} is ${_statusLabel(trip.status).toLowerCase()}'
+              : 'Tracked trip #${trip.id} changed to ${_statusLabel(trip.status).toLowerCase()}',
+          description: trip.deliveryOrders.isEmpty
+              ? 'No delivery orders were returned for this trip.'
+              : '${trip.deliveredOrders}/${trip.deliveryOrders.length} delivery orders are marked as delivered.',
+          accent: _statusAccent(trip.status),
+        ),
+      );
     }
+
+    for (final alert in alerts.take(2)) {
+      final time = alert.lastActivityAt ?? dashboard.loadedAt;
+      events.add(
+        _TimelineEvent(
+          time: _formatHourMinute(time),
+          title:
+              '${_titleCase(alert.type)} alert is ${_statusLabel(alert.status).toLowerCase()}',
+          description: alert.deliveryOrderId == null
+              ? 'The alert is visible without a linked delivery order id.'
+              : 'Linked delivery order: #${alert.deliveryOrderId}.',
+          accent: _statusAccent(alert.status),
+        ),
+      );
+    }
+
+    if (events.isEmpty) {
+      return const [
+        _TimelineEvent(
+          time: '--:--',
+          title: 'No recent activity',
+          description:
+              'Trips and alerts from the backend will appear here as soon as data exists.',
+          accent: AppColors.secondary,
+        ),
+      ];
+    }
+
+    return events.take(4).toList(growable: false);
   }
 
-  List<_MiniStatData> _alertSummaryFor(UserRole role) {
-    switch (role) {
-      case UserRole.fleetManager:
-        return const [
-          _MiniStatData(
-            label: 'Critical',
-            value: '1',
-            icon: Icons.priority_high_rounded,
-            accent: AppColors.danger,
-          ),
-          _MiniStatData(
-            label: 'Acknowledged',
-            value: '2',
-            icon: Icons.rule_folder_outlined,
-            accent: AppColors.warning,
-          ),
-          _MiniStatData(
-            label: 'Resolved Today',
-            value: '5',
-            icon: Icons.task_alt_rounded,
-            accent: AppColors.success,
-          ),
-        ];
-      case UserRole.customer:
-        return const [
-          _MiniStatData(
-            label: 'Open',
-            value: '1',
-            icon: Icons.notification_important_outlined,
-            accent: AppColors.warning,
-          ),
-          _MiniStatData(
-            label: 'Shared',
-            value: '2',
-            icon: Icons.people_outline_rounded,
-            accent: AppColors.primary,
-          ),
-          _MiniStatData(
-            label: 'Resolved',
-            value: '4',
-            icon: Icons.check_circle_outline_rounded,
-            accent: AppColors.success,
-          ),
-        ];
-    }
-  }
-
-  List<_AlertCardData> _alertsFor(UserRole role) {
-    switch (role) {
-      case UserRole.fleetManager:
-        return const [
-          _AlertCardData(
-            severity: 'Critical',
-            title: 'Temperature spike on Trip LN-221',
-            description: 'Lectura de 8.1°C por encima del rango objetivo durante 4 minutos.',
-            timestamp: 'Updated 6 min ago',
-            accent: AppColors.danger,
-          ),
-          _AlertCardData(
-            severity: 'Medium',
-            title: 'Device battery low on Vehicle V-09',
-            description: 'Reemplazo recomendado antes del siguiente despacho programado.',
-            timestamp: 'Updated 18 min ago',
-            accent: AppColors.warning,
-          ),
-          _AlertCardData(
-            severity: 'Info',
-            title: 'Route checkpoint skipped automatically',
-            description: 'El viaje continuo sin detenerse por una geocerca intermedia configurada.',
-            timestamp: 'Updated 24 min ago',
-            accent: AppColors.secondary,
-          ),
-        ];
-      case UserRole.customer:
-        return const [
-          _AlertCardData(
-            severity: 'Open',
-            title: 'Minor delay on Order LN-318',
-            description: 'El trafico en ruta desplazo la llegada estimada 12 minutos.',
-            timestamp: 'Updated 4 min ago',
-            accent: AppColors.warning,
-          ),
-          _AlertCardData(
-            severity: 'Resolved',
-            title: 'Temperature drift corrected',
-            description: 'La lectura volvio a rango sin comprometer la condicion del envio.',
-            timestamp: 'Resolved 52 min ago',
-            accent: AppColors.success,
-          ),
-        ];
-    }
-  }
-
-  List<_InvoiceRowData> _billingRows() {
-    return const [
-      _InvoiceRowData(
-        code: 'INV-2026-051',
-        amount: 'USD 149',
-        dueLabel: 'Paid on Jun 01',
-        status: 'Paid',
-        accent: AppColors.success,
+  List<_MiniStatData> _alertSummaryFor(HomeDashboard dashboard) {
+    return [
+      _MiniStatData(
+        label: 'Open',
+        value: '${dashboard.openAlerts}',
+        icon: Icons.priority_high_rounded,
+        accent: AppColors.danger,
       ),
-      _InvoiceRowData(
-        code: 'INV-2026-050',
-        amount: 'USD 149',
-        dueLabel: 'Due on Jun 28',
-        status: 'Pending',
+      _MiniStatData(
+        label: 'Acknowledged',
+        value: '${dashboard.acknowledgedAlerts}',
+        icon: Icons.rule_folder_outlined,
         accent: AppColors.warning,
       ),
-      _InvoiceRowData(
-        code: 'INV-2026-049',
-        amount: 'USD 149',
-        dueLabel: 'Paid on Apr 30',
-        status: 'Paid',
+      _MiniStatData(
+        label: 'Closed',
+        value: '${dashboard.closedAlerts}',
+        icon: Icons.task_alt_rounded,
         accent: AppColors.success,
       ),
     ];
   }
 
-  List<_MiniStatData> _billingUsageStats() {
-    return const [
+  List<_AlertCardData> _alertsFor(HomeDashboard dashboard) {
+    final alerts = [...dashboard.alerts]
+      ..sort(
+        (left, right) => (right.lastActivityAt ?? dashboard.loadedAt)
+            .compareTo(left.lastActivityAt ?? dashboard.loadedAt),
+      );
+
+    if (alerts.isEmpty) {
+      return const [
+        _AlertCardData(
+          severity: 'Clear',
+          title: 'No alerts available',
+          description:
+              'The current backend did not return alerts for the visible workspace.',
+          timestamp: 'Backend synced',
+          accent: AppColors.success,
+        ),
+      ];
+    }
+
+    return alerts.take(4).map((alert) {
+      return _AlertCardData(
+        severity: _statusLabel(alert.status),
+        title: '${_titleCase(alert.type)} alert'
+            '${alert.deliveryOrderId != null ? ' on order #${alert.deliveryOrderId}' : ''}',
+        description:
+            'Current backend status: ${_statusLabel(alert.status).toLowerCase()}.',
+        timestamp: _relativeTimestamp(
+          alert.lastActivityAt,
+          fallback: dashboard.loadedAt,
+        ),
+        accent: _statusAccent(alert.status),
+      );
+    }).toList(growable: false);
+  }
+
+  List<_MiniStatData> _billingUsageStats(HomeDashboard dashboard) {
+    return [
       _MiniStatData(
         label: 'Active trips',
-        value: '2',
+        value: '${dashboard.activeTrips}',
         icon: Icons.route_outlined,
         accent: AppColors.primary,
       ),
       _MiniStatData(
-        label: 'Alert channels',
-        value: '3',
+        label: 'Visible alerts',
+        value: '${dashboard.totalAlerts}',
         icon: Icons.notifications_outlined,
         accent: AppColors.secondary,
       ),
       _MiniStatData(
-        label: 'Renewal risk',
-        value: 'Low',
+        label: 'Live sessions',
+        value: '${dashboard.activeSessions.length}',
         icon: Icons.health_and_safety_outlined,
         accent: AppColors.success,
       ),
     ];
+  }
+
+  String _vehicleLabel(HomeDashboard dashboard, String? vehicleId) {
+    if (vehicleId == null) {
+      return 'No vehicle assigned';
+    }
+
+    for (final vehicle in dashboard.vehicles) {
+      if (vehicle.id == vehicleId) {
+        return 'Vehicle ${vehicle.plate}';
+      }
+    }
+
+    return 'Vehicle #$vehicleId';
+  }
+
+  Color _statusAccent(String status) {
+    switch (status.toUpperCase()) {
+      case 'COMPLETED':
+      case 'CLOSED':
+      case 'DELIVERED':
+        return AppColors.success;
+      case 'OPEN':
+      case 'FAILED':
+      case 'CANCELLED':
+        return AppColors.danger;
+      case 'ACKNOWLEDGED':
+        return AppColors.warning;
+      case 'IN_PROGRESS':
+      case 'ACTIVE':
+        return AppColors.primary;
+      default:
+        return AppColors.secondary;
+    }
+  }
+
+  String _statusLabel(String status) {
+    switch (status.toUpperCase()) {
+      case 'IN_PROGRESS':
+        return 'In Progress';
+      case 'PLANNED':
+        return 'Planned';
+      case 'COMPLETED':
+        return 'Completed';
+      case 'CANCELLED':
+        return 'Cancelled';
+      case 'OPEN':
+        return 'Open';
+      case 'ACKNOWLEDGED':
+        return 'Acknowledged';
+      case 'CLOSED':
+        return 'Closed';
+      case 'DELIVERED':
+        return 'Delivered';
+      case 'FAILED':
+        return 'Failed';
+      case 'ACTIVE':
+        return 'Active';
+      default:
+        return _titleCase(status);
+    }
+  }
+
+  String _titleCase(String value) {
+    return value
+        .toLowerCase()
+        .split('_')
+        .where((part) => part.isNotEmpty)
+        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
+  }
+
+  String _formatHourMinute(DateTime dateTime) {
+    final local = dateTime.toLocal();
+    final hours = local.hour.toString().padLeft(2, '0');
+    final minutes = local.minute.toString().padLeft(2, '0');
+    return '$hours:$minutes';
+  }
+
+  String _relativeTimestamp(DateTime? value, {required DateTime fallback}) {
+    final timestamp = (value ?? fallback).toLocal();
+    final difference = DateTime.now().difference(timestamp);
+    if (difference.inMinutes < 1) {
+      return 'Updated just now';
+    }
+    if (difference.inMinutes < 60) {
+      return 'Updated ${difference.inMinutes} min ago';
+    }
+    if (difference.inHours < 24) {
+      return 'Updated ${difference.inHours} h ago';
+    }
+    return 'Updated ${difference.inDays} d ago';
   }
 
   String _formatDateTime(DateTime dateTime) {
@@ -1205,6 +1353,104 @@ class _ScrollablePage extends StatelessWidget {
         AppSpacing.xl,
       ),
       child: child,
+    );
+  }
+}
+
+class _LoadingState extends StatelessWidget {
+  const _LoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: AppSpacing.md),
+          Text('Loading workspace data...'),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({
+    required this.message,
+    required this.onRetry,
+  });
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.cloud_off_rounded,
+                  size: 42,
+                  color: AppColors.warning,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                FilledButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ScopeNoticeCard extends StatelessWidget {
+  const _ScopeNoticeCard({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: const Color(0xFFFFF7E8),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(
+              Icons.info_outline_rounded,
+              color: AppColors.warning,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.ink,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -1592,7 +1838,7 @@ class _ProgressCard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
               child: LinearProgressIndicator(
-                value: card.progress,
+                value: card.progress.clamp(0, 1),
                 minHeight: 8,
                 backgroundColor: AppColors.border,
                 valueColor: AlwaysStoppedAnimation<Color>(card.accent),
@@ -1821,50 +2067,6 @@ class _ChecklistTile extends StatelessWidget {
   }
 }
 
-class _InvoiceTile extends StatelessWidget {
-  const _InvoiceTile({required this.invoice});
-
-  final _InvoiceRowData invoice;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Container(
-        height: 42,
-        width: 42,
-        decoration: BoxDecoration(
-          color: invoice.accent.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-        ),
-        child: Icon(
-          Icons.receipt_long_outlined,
-          color: invoice.accent,
-        ),
-      ),
-      title: Text(invoice.code),
-      subtitle: Text(invoice.dueLabel),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            invoice.amount,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            invoice.status,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: invoice.accent,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _KeyValueItem extends StatelessWidget {
   const _KeyValueItem({
     required this.label,
@@ -1983,20 +2185,22 @@ class _UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initials = name
+    final parts = name
         .trim()
         .split(RegExp(r'\s+'))
         .where((part) => part.isNotEmpty)
         .take(2)
-        .map((part) => part.characters.first.toUpperCase())
-        .join();
+        .toList(growable: false);
+    final initials = parts.isEmpty
+        ? 'U'
+        : parts.map((part) => part.substring(0, 1).toUpperCase()).join();
 
     return Container(
       height: size,
       width: size,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [
             AppColors.primary,
             AppColors.secondary,
@@ -2105,21 +2309,5 @@ class _AlertCardData {
   final String title;
   final String description;
   final String timestamp;
-  final Color accent;
-}
-
-class _InvoiceRowData {
-  const _InvoiceRowData({
-    required this.code,
-    required this.amount,
-    required this.dueLabel,
-    required this.status,
-    required this.accent,
-  });
-
-  final String code;
-  final String amount;
-  final String dueLabel;
-  final String status;
   final Color accent;
 }

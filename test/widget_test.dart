@@ -9,6 +9,9 @@ import 'package:logic_nodes_mobile/features/auth/application/use_cases/sign_in_u
 import 'package:logic_nodes_mobile/features/auth/data/datasources/mock_auth_datasource.dart';
 import 'package:logic_nodes_mobile/features/auth/data/repositories/mock_auth_repository.dart';
 import 'package:logic_nodes_mobile/features/auth/domain/entities/auth_session.dart';
+import 'package:logic_nodes_mobile/features/home/application/controllers/home_controller.dart';
+import 'package:logic_nodes_mobile/features/home/domain/entities/home_dashboard.dart';
+import 'package:logic_nodes_mobile/features/home/domain/repositories/home_repository.dart';
 import 'package:logic_nodes_mobile/main.dart';
 
 void main() {
@@ -30,6 +33,10 @@ void main() {
               () => RegisterController(authRepository: repository),
           passwordRecoveryControllerFactory:
               () => PasswordRecoveryController(authRepository: repository),
+          homeControllerFactory: () => HomeController(
+            homeRepository: _FakeHomeRepository(),
+            sessionController: sessionController,
+          ),
           sessionController: sessionController,
         ),
       ),
@@ -39,4 +46,24 @@ void main() {
     expect(find.text('Sign In'), findsOneWidget);
     expect(find.text('Backend connection'), findsOneWidget);
   });
+}
+
+class _FakeHomeRepository implements HomeRepository {
+  @override
+  Future<HomeDashboard> loadDashboard({
+    required String accessToken,
+    required String userId,
+    required String email,
+    required bool isFleetManager,
+  }) async {
+    return HomeDashboard(
+      trips: const [],
+      alerts: const [],
+      vehicles: const [],
+      devices: const [],
+      activeSessions: const [],
+      loadedAt: DateTime(2026, 1, 1),
+      scopeApplied: true,
+    );
+  }
 }

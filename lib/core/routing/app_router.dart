@@ -8,6 +8,7 @@ import '../../features/auth/application/use_cases/sign_in_use_case.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/password_recovery_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/home/application/controllers/home_controller.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import 'app_routes.dart';
 
@@ -17,6 +18,7 @@ class AppRouter {
     required this.signInUseCase,
     required this.registerControllerFactory,
     required this.passwordRecoveryControllerFactory,
+    required this.homeControllerFactory,
     required this.sessionController,
   });
 
@@ -25,6 +27,7 @@ class AppRouter {
   final RegisterController Function() registerControllerFactory;
   final PasswordRecoveryController Function()
       passwordRecoveryControllerFactory;
+  final HomeController Function() homeControllerFactory;
   final SessionController sessionController;
 
   Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -56,6 +59,7 @@ class AppRouter {
       case AppRoutes.home:
         return MaterialPageRoute<void>(
           builder: (_) => HomeScreen(
+            controller: homeControllerFactory(),
             sessionController: sessionController,
           ),
           settings: settings,

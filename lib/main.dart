@@ -13,13 +13,22 @@ import 'features/auth/application/use_cases/sign_in_use_case.dart';
 import 'features/auth/data/datasources/remote_auth_datasource.dart';
 import 'features/auth/data/repositories/remote_auth_repository.dart';
 import 'features/auth/domain/entities/auth_session.dart';
+import 'features/home/application/controllers/home_controller.dart';
+import 'features/home/data/datasources/remote_home_datasource.dart';
+import 'features/home/data/repositories/remote_home_repository.dart';
 
 void main() {
+  final apiClient = ApiClient(
+    baseUrl: ApiEnvironment.baseUrl,
+  );
   final authRepository = RemoteAuthRepository(
     datasource: RemoteAuthDatasource(
-      apiClient: ApiClient(
-        baseUrl: ApiEnvironment.baseUrl,
-      ),
+      apiClient: apiClient,
+    ),
+  );
+  final homeRepository = RemoteHomeRepository(
+    datasource: RemoteHomeDatasource(
+      apiClient: apiClient,
     ),
   );
   final sessionController = SessionController(
@@ -36,6 +45,10 @@ void main() {
             () => RegisterController(authRepository: authRepository),
         passwordRecoveryControllerFactory:
             () => PasswordRecoveryController(authRepository: authRepository),
+        homeControllerFactory: () => HomeController(
+          homeRepository: homeRepository,
+          sessionController: sessionController,
+        ),
         sessionController: sessionController,
       ),
     ),
