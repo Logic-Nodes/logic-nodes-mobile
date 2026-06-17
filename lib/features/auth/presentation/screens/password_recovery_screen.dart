@@ -57,7 +57,7 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
           ),
           title: isRequest ? 'Password Recovery' : 'Create New Password',
           description: isRequest
-              ? 'The current backend does not expose recovery yet. This screen stays available so the mobile flow remains aligned to the report.'
+              ? 'Enter your email and we will issue the instructions to reset your password.'
               : 'Set a new password to recover access to your account.',
           child: Form(
             key: isRequest ? _requestFormKey : _resetFormKey,

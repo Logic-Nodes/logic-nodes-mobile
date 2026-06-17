@@ -374,6 +374,13 @@ class _HomeScreenState extends State<HomeScreen> {
             accent: AppColors.warning,
             icon: Icons.warning_amber_rounded,
           ),
+          const SizedBox(height: AppSpacing.md),
+          FilledButton.icon(
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.alerts),
+            icon: const Icon(Icons.open_in_new_rounded),
+            label: const Text('Open alerts center'),
+          ),
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
             title: 'Alert Pipeline',
@@ -446,6 +453,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 'Vista de estado del modulo de billing desde la perspectiva del backend actual.',
             roleLabel: user.role.label,
             companyLabel: user.companyName ?? 'Personal workspace',
+          ),
+          const SizedBox(height: AppSpacing.md),
+          FilledButton.icon(
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.subscription),
+            icon: const Icon(Icons.receipt_long_rounded),
+            label: const Text('Manage subscription & payments'),
           ),
           const SizedBox(height: AppSpacing.lg),
           Card(
@@ -690,6 +704,25 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: AppSpacing.sm),
           ],
+          const SizedBox(height: AppSpacing.lg),
+          const _SectionHeading(
+            title: 'Quick Access',
+            description: 'Pantallas del flujo mobile alineadas al reporte.',
+          ),
+          const SizedBox(height: AppSpacing.md),
+          OutlinedButton.icon(
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.alerts),
+            icon: const Icon(Icons.notifications_active_outlined),
+            label: const Text('Open alerts center'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          OutlinedButton.icon(
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.subscription),
+            icon: const Icon(Icons.receipt_long_outlined),
+            label: const Text('Manage subscription & payments'),
+          ),
           const SizedBox(height: AppSpacing.lg),
           FilledButton.icon(
             onPressed: _signOut,
@@ -1597,7 +1630,7 @@ class _MetricGrid extends StatelessWidget {
             crossAxisCount: columns,
             crossAxisSpacing: AppSpacing.sm,
             mainAxisSpacing: AppSpacing.sm,
-            childAspectRatio: 1.05,
+            childAspectRatio: 0.9,
           ),
           itemBuilder: (context, index) => _MetricCard(metric: metrics[index]),
         );

@@ -68,6 +68,21 @@ class ApiClient {
     );
   }
 
+  Future<Object?> patch(
+    String path, {
+    Object? body,
+    Map<String, String>? headers,
+    Set<int> expectedStatusCodes = const {200},
+  }) {
+    return _request(
+      'PATCH',
+      path,
+      body: body,
+      headers: headers,
+      expectedStatusCodes: expectedStatusCodes,
+    );
+  }
+
   Future<Object?> _request(
     String method,
     String path, {
@@ -98,6 +113,13 @@ class ApiClient {
             .timeout(timeout),
         'PUT' => await _httpClient
             .put(
+              uri,
+              headers: requestHeaders,
+              body: body == null ? null : jsonEncode(body),
+            )
+            .timeout(timeout),
+        'PATCH' => await _httpClient
+            .patch(
               uri,
               headers: requestHeaders,
               body: body == null ? null : jsonEncode(body),

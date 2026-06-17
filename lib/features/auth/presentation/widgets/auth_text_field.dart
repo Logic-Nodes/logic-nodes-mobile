@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AuthTextField extends StatelessWidget {
   const AuthTextField({
@@ -11,6 +12,7 @@ class AuthTextField extends StatelessWidget {
     this.prefixIcon,
     this.obscureText = false,
     this.enabled = true,
+    this.inputFormatters,
     super.key,
   });
 
@@ -23,6 +25,7 @@ class AuthTextField extends StatelessWidget {
   final IconData? prefixIcon;
   final bool obscureText;
   final bool enabled;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +36,7 @@ class AuthTextField extends StatelessWidget {
       validator: validator,
       obscureText: obscureText,
       enabled: enabled,
+      inputFormatters: inputFormatters,
       style: const TextStyle(
         color: Colors.black,
         fontWeight: FontWeight.w500,

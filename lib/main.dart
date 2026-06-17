@@ -13,6 +13,12 @@ import 'features/auth/application/use_cases/sign_in_use_case.dart';
 import 'features/auth/data/datasources/remote_auth_datasource.dart';
 import 'features/auth/data/repositories/remote_auth_repository.dart';
 import 'features/auth/domain/entities/auth_session.dart';
+import 'features/alerts/application/controllers/alerts_controller.dart';
+import 'features/alerts/data/datasources/remote_alert_datasource.dart';
+import 'features/alerts/data/repositories/remote_alert_repository.dart';
+import 'features/billing/application/controllers/billing_controller.dart';
+import 'features/billing/data/datasources/remote_billing_datasource.dart';
+import 'features/billing/data/repositories/remote_billing_repository.dart';
 import 'features/home/application/controllers/home_controller.dart';
 import 'features/home/data/datasources/remote_home_datasource.dart';
 import 'features/home/data/repositories/remote_home_repository.dart';
@@ -28,6 +34,16 @@ void main() {
   );
   final homeRepository = RemoteHomeRepository(
     datasource: RemoteHomeDatasource(
+      apiClient: apiClient,
+    ),
+  );
+  final alertRepository = RemoteAlertRepository(
+    datasource: RemoteAlertDatasource(
+      apiClient: apiClient,
+    ),
+  );
+  final billingRepository = RemoteBillingRepository(
+    datasource: RemoteBillingDatasource(
       apiClient: apiClient,
     ),
   );
@@ -47,6 +63,14 @@ void main() {
             () => PasswordRecoveryController(authRepository: authRepository),
         homeControllerFactory: () => HomeController(
           homeRepository: homeRepository,
+          sessionController: sessionController,
+        ),
+        alertsControllerFactory: () => AlertsController(
+          alertRepository: alertRepository,
+          sessionController: sessionController,
+        ),
+        billingControllerFactory: () => BillingController(
+          billingRepository: billingRepository,
           sessionController: sessionController,
         ),
         sessionController: sessionController,
