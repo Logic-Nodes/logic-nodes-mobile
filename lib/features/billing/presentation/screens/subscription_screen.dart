@@ -67,7 +67,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             if (controller.isLoading) {
               return const Center(child: CircularProgressIndicator());
             }
-
             return _BillingError(
               message: controller.errorMessage ??
                   'No subscription data is available yet.',
@@ -77,49 +76,60 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
           return RefreshIndicator(
             onRefresh: controller.load,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.xl,
-              ),
+            child: Stack(
               children: [
-                _SubscriptionCard(subscription: subscription),
-                const SizedBox(height: AppSpacing.lg),
-                Row(
+                ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.md,
+                    AppSpacing.md,
+                    AppSpacing.xl,
+                  ),
                   children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _openLinkPayment,
-                        child: Text(
-                          subscription.hasPaymentMethod
-                              ? 'Change card'
-                              : 'Add card',
+                    _SubscriptionCard(subscription: subscription),
+                    const SizedBox(height: AppSpacing.lg),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: _openLinkPayment,
+                            child: Text(
+                              subscription.hasPaymentMethod
+                                  ? 'Change card'
+                                  : 'Add card',
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: subscription.isCanceled
+                                ? null
+                                : _confirmCancel,
+                            child: const Text('Cancel your plan'),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => _showSoon(context, 'Cancel your plan'),
-                        child: const Text('Cancel your plan'),
-                      ),
+                    const SizedBox(height: AppSpacing.sm),
+                    FilledButton(
+                      onPressed: _openPlanPicker,
+                      child: const Text('Upgrade your plan'),
                     ),
+                    const SizedBox(height: AppSpacing.xl),
+                    Text(
+                      'PAYMENT HISTORY',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _PaymentHistory(payments: controller.payments),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                FilledButton(
-                  onPressed: () => _showSoon(context, 'Upgrade your plan'),
-                  child: const Text('Upgrade your plan'),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                Text(
-                  'PAYMENT HISTORY',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                _PaymentHistory(payments: controller.payments),
+                if (controller.isMutating)
+                  const Align(
+                    alignment: Alignment.topCenter,
+                    child: LinearProgressIndicator(minHeight: 2),
+                  ),
               ],
             ),
           );
@@ -134,12 +144,95 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         builder: (_) => LinkPaymentMethodScreen(controller: widget.controller),
       ),
     );
-    await widget.controller.load();
   }
 
-  void _showSoon(BuildContext context, String action) {
+  Future<void> _confirmCancel() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Cancel subscription'),
+        content: const Text(
+          'Your plan will be marked as canceled. You can re-subscribe later.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Keep plan'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Cancel plan'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    final ok = await widget.controller.cancelSubscription();
+    _notify(ok ? 'Subscription canceled.' : null);
+  }
+
+  Future<void> _openPlanPicker() async {
+    final controller = widget.controller;
+    final current = controller.subscription;
+
+    final selectedPlanId = await showModalBottomSheet<int>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            children: [
+              Text(
+                'Choose a plan',
+                style: Theme.of(sheetContext).textTheme.titleLarge,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              for (final plan in controller.plans)
+                Card(
+                  child: ListTile(
+                    selected: current?.plan.id == plan.id,
+                    title: Text('${plan.name} - ${plan.priceLabel}'),
+                    subtitle: Text('${plan.limits}\n${plan.description}'),
+                    isThreeLine: true,
+                    trailing: current?.plan.id == plan.id
+                        ? const Icon(Icons.check_circle_rounded,
+                            color: AppColors.success)
+                        : const Icon(Icons.chevron_right_rounded),
+                    onTap: () => Navigator.of(sheetContext).pop(plan.id),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selectedPlanId == null || selectedPlanId == current?.plan.id) {
+      return;
+    }
+
+    final ok = await controller.changePlan(selectedPlanId);
+    _notify(ok ? 'Plan updated.' : null);
+  }
+
+  void _notify(String? successMessage) {
+    if (!mounted) {
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$action will be available soon.')),
+      SnackBar(
+        content: Text(
+          successMessage ??
+              widget.controller.errorMessage ??
+              'Operation failed.',
+        ),
+      ),
     );
   }
 }
@@ -164,21 +257,27 @@ class _SubscriptionCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            _KeyValueRow(label: 'Current Plan', value: subscription.planName),
+            _KeyValueRow(label: 'Current Plan', value: subscription.plan.name),
             const SizedBox(height: AppSpacing.sm),
-            _KeyValueRow(label: 'Amount', value: subscription.amountLabel),
+            _KeyValueRow(label: 'Amount', value: subscription.plan.priceLabel),
+            const SizedBox(height: AppSpacing.sm),
+            _KeyValueRow(label: 'Limits', value: subscription.plan.limits),
             const SizedBox(height: AppSpacing.sm),
             _KeyValueRow(
               label: 'Status',
               value: subscription.status,
-              valueColor: AppColors.success,
+              valueColor: subscription.isCanceled
+                  ? AppColors.danger
+                  : AppColors.success,
             ),
             const SizedBox(height: AppSpacing.sm),
-            _KeyValueRow(label: 'Renewal', value: subscription.renewalLabel),
+            _KeyValueRow(label: 'Renewal', value: subscription.renewal),
             const SizedBox(height: AppSpacing.sm),
             _KeyValueRow(
               label: 'Payment Method',
-              value: subscription.paymentMethodLabel ?? '--------',
+              value: subscription.hasPaymentMethod
+                  ? subscription.paymentMethod
+                  : '--------',
             ),
           ],
         ),
@@ -230,7 +329,7 @@ class _KeyValueRow extends StatelessWidget {
 class _PaymentHistory extends StatelessWidget {
   const _PaymentHistory({required this.payments});
 
-  final List<PaymentRecord> payments;
+  final List<Payment> payments;
 
   @override
   Widget build(BuildContext context) {
@@ -274,13 +373,9 @@ class _PaymentHistory extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  _BodyCell(payment.date, flex: 3),
+                  _BodyCell(payment.paymentDate, flex: 3),
                   _BodyCell(payment.amountLabel, flex: 2),
-                  _BodyCell(
-                    payment.status,
-                    flex: 2,
-                    color: AppColors.success,
-                  ),
+                  _BodyCell(payment.status, flex: 2, color: AppColors.success),
                   _BodyCell(payment.transactionId, flex: 3),
                 ],
               ),

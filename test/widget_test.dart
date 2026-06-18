@@ -89,6 +89,14 @@ class _FakeAlertRepository implements AlertRepository {
 }
 
 class _FakeBillingRepository implements BillingRepository {
+  static const _plan = Plan(
+    id: 2,
+    name: 'PROFESSIONAL',
+    limits: 'Up to 25 vehicles',
+    price: 79,
+    description: 'Advanced monitoring.',
+  );
+
   @override
   Future<BillingSnapshot> loadBilling({
     required String accessToken,
@@ -96,27 +104,43 @@ class _FakeBillingRepository implements BillingRepository {
   }) async {
     return const BillingSnapshot(
       subscription: Subscription(
-        planName: 'PROFESSIONAL',
-        amountLabel: r'$79.00/month',
+        id: 1,
         status: 'ACTIVE',
-        renewalLabel: '07/16/2026',
+        renewal: '2026-07-17',
+        paymentMethod: '',
+        plan: _plan,
       ),
+      plans: [_plan],
       payments: [],
     );
   }
 
   @override
-  Future<Subscription> linkPaymentMethod({
+  Future<Subscription> changePlan({
     required String accessToken,
-    required String userId,
-    required PaymentMethodDraft draft,
+    required int subscriptionId,
+    required int newPlanId,
   }) async {
-    return Subscription(
-      planName: 'PROFESSIONAL',
-      amountLabel: r'$79.00/month',
+    return const Subscription(
+      id: 1,
       status: 'ACTIVE',
-      renewalLabel: '07/16/2026',
-      paymentMethodLabel: draft.maskedLabel,
+      renewal: '2026-07-17',
+      paymentMethod: '',
+      plan: _plan,
+    );
+  }
+
+  @override
+  Future<Subscription> cancelSubscription({
+    required String accessToken,
+    required int subscriptionId,
+  }) async {
+    return const Subscription(
+      id: 1,
+      status: 'CANCELED',
+      renewal: '2026-07-17',
+      paymentMethod: '',
+      plan: _plan,
     );
   }
 }

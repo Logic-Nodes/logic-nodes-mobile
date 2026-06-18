@@ -4,10 +4,12 @@ class BillingSnapshot {
   const BillingSnapshot({
     required this.subscription,
     required this.payments,
+    required this.plans,
   });
 
   final Subscription subscription;
-  final List<PaymentRecord> payments;
+  final List<Payment> payments;
+  final List<Plan> plans;
 }
 
 abstract class BillingRepository {
@@ -16,9 +18,14 @@ abstract class BillingRepository {
     required String userId,
   });
 
-  Future<Subscription> linkPaymentMethod({
+  Future<Subscription> changePlan({
     required String accessToken,
-    required String userId,
-    required PaymentMethodDraft draft,
+    required int subscriptionId,
+    required int newPlanId,
+  });
+
+  Future<Subscription> cancelSubscription({
+    required String accessToken,
+    required int subscriptionId,
   });
 }

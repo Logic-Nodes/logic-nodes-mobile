@@ -5,10 +5,9 @@ import '../../../auth/application/controllers/session_controller.dart';
 import '../../domain/entities/subscription.dart';
 import '../../domain/repositories/billing_repository.dart';
 
-/// Billing module wired to the real backend (`/api/v1/billing/*`).
-///
-/// Loads the subscription snapshot and payment history for the authenticated
-/// user, and links payment methods through the API.
+/// Billing module wired to the backend contract
+/// (`/plans`, `/subscription/user-id/:id`, `/subscription/:id/plan`,
+/// `/subscription/:id`, `/payments/user-id/:id`).
 class BillingController extends ChangeNotifier {
   BillingController({
     required this.billingRepository,
@@ -19,15 +18,17 @@ class BillingController extends ChangeNotifier {
   final SessionController sessionController;
 
   Subscription? _subscription;
-  List<PaymentRecord> _payments = const [];
+  List<Payment> _payments = const [];
+  List<Plan> _plans = const [];
   bool _isLoading = false;
-  bool _isLinking = false;
+  bool _isMutating = false;
   String? _errorMessage;
 
   Subscription? get subscription => _subscription;
-  List<PaymentRecord> get payments => _payments;
+  List<Payment> get payments => _payments;
+  List<Plan> get plans => _plans;
   bool get isLoading => _isLoading;
-  bool get isLinking => _isLinking;
+  bool get isMutating => _isMutating;
   String? get errorMessage => _errorMessage;
 
   Future<void> load() async {
@@ -47,6 +48,7 @@ class BillingController extends ChangeNotifier {
       );
       _subscription = snapshot.subscription;
       _payments = snapshot.payments;
+      _plans = snapshot.plans;
     } on AppException catch (exception) {
       _errorMessage = exception.message;
     } on Exception {
@@ -57,28 +59,47 @@ class BillingController extends ChangeNotifier {
     }
   }
 
-  Future<bool> linkPaymentMethod(PaymentMethodDraft draft) async {
+  Future<bool> changePlan(int newPlanId) async {
+    return _mutate(
+      (session, subscription) => billingRepository.changePlan(
+        accessToken: session.accessToken,
+        subscriptionId: subscription.id,
+        newPlanId: newPlanId,
+      ),
+    );
+  }
+
+  Future<bool> cancelSubscription() async {
+    return _mutate(
+      (session, subscription) => billingRepository.cancelSubscription(
+        accessToken: session.accessToken,
+        subscriptionId: subscription.id,
+      ),
+    );
+  }
+
+  Future<bool> _mutate(
+    Future<Subscription> Function(dynamic session, Subscription subscription)
+        action,
+  ) async {
     final session = sessionController.session;
-    if (session == null || _isLinking) {
+    final current = _subscription;
+    if (session == null || current == null || _isMutating) {
       return false;
     }
 
-    _isLinking = true;
+    _isMutating = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      _subscription = await billingRepository.linkPaymentMethod(
-        accessToken: session.accessToken,
-        userId: session.user.id,
-        draft: draft,
-      );
+      _subscription = await action(session, current);
       return true;
     } on AppException catch (exception) {
       _errorMessage = exception.message;
       return false;
     } finally {
-      _isLinking = false;
+      _isMutating = false;
       notifyListeners();
     }
   }
