@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import '../../../../core/utils/design_tokens.dart';
 import '../../../auth/presentation/widgets/auth_text_field.dart';
 import '../../application/controllers/billing_controller.dart';
-import '../../domain/entities/subscription.dart';
 
 class LinkPaymentMethodScreen extends StatefulWidget {
   const LinkPaymentMethodScreen({
@@ -148,24 +147,9 @@ class _LinkPaymentMethodScreenState extends State<LinkPaymentMethodScreen> {
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
-              AnimatedBuilder(
-                animation: widget.controller,
-                builder: (context, _) {
-                  final isLinking = widget.controller.isLinking;
-                  return FilledButton(
-                    onPressed: isLinking ? null : _confirm,
-                    child: isLinking
-                        ? const SizedBox(
-                            height: 22,
-                            width: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.4,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text('CONFIRM'),
-                  );
-                },
+              FilledButton(
+                onPressed: _confirm,
+                child: const Text('CONFIRM'),
               ),
             ],
           ),
@@ -174,41 +158,23 @@ class _LinkPaymentMethodScreenState extends State<LinkPaymentMethodScreen> {
     );
   }
 
-  Future<void> _confirm() async {
+  void _confirm() {
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) {
       return;
     }
 
-    final success = await widget.controller.linkPaymentMethod(
-      PaymentMethodDraft(
-        cardNumber: _cardNumberController.text,
-        expireDate: _expireController.text,
-        cvc: _cvcController.text,
-        postalCode: _postalController.text,
-        country: _countryController.text,
+    // The billing contract does not expose a card-linking endpoint yet, so the
+    // card is only validated locally. Surfaced as a dependency, not faked.
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Card validated. Linking will persist once the backend exposes the '
+          'payments endpoint.',
+        ),
       ),
     );
-
-    if (!mounted) {
-      return;
-    }
-
-    if (success) {
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Payment method linked successfully.')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            widget.controller.errorMessage ??
-                'Unable to link the payment method.',
-          ),
-        ),
-      );
-    }
   }
 }
 
@@ -228,8 +194,8 @@ class _NoBackendNotice extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
-                'For your safety only the last 4 digits are stored. Use a test '
-                'card such as 4242 4242 4242 4242.',
+                'Card linking is not yet exposed by the billing backend, so the '
+                'card is only validated locally. No card data is sent.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.ink,
                     ),

@@ -83,6 +83,21 @@ class ApiClient {
     );
   }
 
+  Future<Object?> delete(
+    String path, {
+    Object? body,
+    Map<String, String>? headers,
+    Set<int> expectedStatusCodes = const {200},
+  }) {
+    return _request(
+      'DELETE',
+      path,
+      body: body,
+      headers: headers,
+      expectedStatusCodes: expectedStatusCodes,
+    );
+  }
+
   Future<Object?> _request(
     String method,
     String path, {
@@ -120,6 +135,13 @@ class ApiClient {
             .timeout(timeout),
         'PATCH' => await _httpClient
             .patch(
+              uri,
+              headers: requestHeaders,
+              body: body == null ? null : jsonEncode(body),
+            )
+            .timeout(timeout),
+        'DELETE' => await _httpClient
+            .delete(
               uri,
               headers: requestHeaders,
               body: body == null ? null : jsonEncode(body),

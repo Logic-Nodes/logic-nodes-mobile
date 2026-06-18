@@ -59,7 +59,7 @@ void main() {
     expect(find.text('Upgrade your plan'), findsOneWidget);
   });
 
-  test('BillingController loads snapshot and links a card via the repository',
+  test('BillingController loads snapshot and changes/cancels via the repository',
       () async {
     final controller = BillingController(
       billingRepository: _FakeBillingRepository(),
@@ -67,21 +67,17 @@ void main() {
     );
 
     await controller.load();
-    expect(controller.subscription?.planName, 'PROFESSIONAL');
-    expect(controller.subscription?.hasPaymentMethod, isFalse);
+    expect(controller.subscription?.plan.name, 'PROFESSIONAL');
     expect(controller.payments.length, 2);
+    expect(controller.plans.length, 2);
 
-    final linked = await controller.linkPaymentMethod(
-      const PaymentMethodDraft(
-        cardNumber: '4242424242424242',
-        expireDate: '12/28',
-        cvc: '123',
-        postalCode: '15001',
-        country: 'Peru',
-      ),
-    );
-    expect(linked, isTrue);
-    expect(controller.subscription?.paymentMethodLabel, 'Card ending in 4242');
+    final changed = await controller.changePlan(3);
+    expect(changed, isTrue);
+    expect(controller.subscription?.plan.name, 'ENTERPRISE');
+
+    final canceled = await controller.cancelSubscription();
+    expect(canceled, isTrue);
+    expect(controller.subscription?.isCanceled, isTrue);
   });
 
   test('AlertsController loads, filters and resolves against the repository',
@@ -158,51 +154,83 @@ class _SeededAlertRepository implements AlertRepository {
 }
 
 class _FakeBillingRepository implements BillingRepository {
-  String? _cardLabel;
+  static const _professional = Plan(
+    id: 2,
+    name: 'PROFESSIONAL',
+    limits: 'Up to 25 vehicles',
+    price: 79,
+    description: 'Advanced monitoring.',
+  );
+  static const _enterprise = Plan(
+    id: 3,
+    name: 'ENTERPRISE',
+    limits: 'Unlimited vehicles',
+    price: 199,
+    description: 'Full platform.',
+  );
 
   @override
   Future<BillingSnapshot> loadBilling({
     required String accessToken,
     required String userId,
   }) async {
-    return BillingSnapshot(
+    return const BillingSnapshot(
       subscription: Subscription(
-        planName: 'PROFESSIONAL',
-        amountLabel: r'$79.00/month',
+        id: 1,
         status: 'ACTIVE',
-        renewalLabel: '07/16/2026',
-        paymentMethodLabel: _cardLabel,
+        renewal: '2026-07-17',
+        paymentMethod: '',
+        plan: _professional,
       ),
-      payments: const [
-        PaymentRecord(
-          date: '06/16/2026',
-          amountLabel: r'$79.00',
+      plans: [_professional, _enterprise],
+      payments: [
+        Payment(
+          id: 1,
           status: 'PAID',
           transactionId: 'TXN-1-0001',
+          amount: 79,
+          paymentDate: '2026-06-16',
+          receiptUrl: '',
         ),
-        PaymentRecord(
-          date: '05/16/2026',
-          amountLabel: r'$79.00',
+        Payment(
+          id: 2,
           status: 'PAID',
           transactionId: 'TXN-1-0002',
+          amount: 79,
+          paymentDate: '2026-05-16',
+          receiptUrl: '',
         ),
       ],
     );
   }
 
   @override
-  Future<Subscription> linkPaymentMethod({
+  Future<Subscription> changePlan({
     required String accessToken,
-    required String userId,
-    required PaymentMethodDraft draft,
+    required int subscriptionId,
+    required int newPlanId,
   }) async {
-    _cardLabel = draft.maskedLabel;
+    final plan = newPlanId == _enterprise.id ? _enterprise : _professional;
     return Subscription(
-      planName: 'PROFESSIONAL',
-      amountLabel: r'$79.00/month',
+      id: subscriptionId,
       status: 'ACTIVE',
-      renewalLabel: '07/16/2026',
-      paymentMethodLabel: _cardLabel,
+      renewal: '2026-07-17',
+      paymentMethod: '',
+      plan: plan,
+    );
+  }
+
+  @override
+  Future<Subscription> cancelSubscription({
+    required String accessToken,
+    required int subscriptionId,
+  }) async {
+    return const Subscription(
+      id: 1,
+      status: 'CANCELED',
+      renewal: '2026-07-17',
+      paymentMethod: '',
+      plan: _professional,
     );
   }
 }

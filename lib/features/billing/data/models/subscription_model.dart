@@ -1,97 +1,118 @@
 import '../../domain/entities/subscription.dart';
 
+class PlanModel {
+  const PlanModel({
+    required this.id,
+    required this.name,
+    required this.limits,
+    required this.price,
+    required this.description,
+  });
+
+  factory PlanModel.fromMap(Map<String, dynamic> map) {
+    return PlanModel(
+      id: _intValue(map['id']),
+      name: _stringValue(map['name'], fallback: 'PLAN'),
+      limits: _stringValue(map['limits'], fallback: ''),
+      price: _doubleValue(map['price']),
+      description: _stringValue(map['description'], fallback: ''),
+    );
+  }
+
+  final int id;
+  final String name;
+  final String limits;
+  final double price;
+  final String description;
+
+  Plan toDomain() => Plan(
+        id: id,
+        name: name,
+        limits: limits,
+        price: price,
+        description: description,
+      );
+}
+
 class SubscriptionModel {
   const SubscriptionModel({
-    required this.planName,
-    required this.amountCents,
-    required this.currency,
+    required this.id,
     required this.status,
-    required this.renewalDate,
-    this.paymentMethodLabel,
+    required this.renewal,
+    required this.paymentMethod,
+    required this.plan,
   });
 
   factory SubscriptionModel.fromMap(Map<String, dynamic> map) {
+    final rawPlan = map['plan'];
     return SubscriptionModel(
-      planName: _stringValue(map['planName'], fallback: 'PROFESSIONAL'),
-      amountCents: _intValue(map['amountCents']),
-      currency: _stringValue(map['currency'], fallback: 'USD'),
+      id: _intValue(map['id']),
       status: _stringValue(map['status'], fallback: 'ACTIVE'),
-      renewalDate: _stringValue(map['renewalDate'], fallback: '--'),
-      paymentMethodLabel: _nullableStringValue(map['paymentMethodLabel']),
+      renewal: _stringValue(map['renewal'], fallback: '--'),
+      paymentMethod: _stringValue(map['paymentMethod'], fallback: ''),
+      plan: PlanModel.fromMap(
+        rawPlan is Map<String, dynamic> ? rawPlan : const {},
+      ),
     );
   }
 
-  final String planName;
-  final int amountCents;
-  final String currency;
+  final int id;
   final String status;
-  final String renewalDate;
-  final String? paymentMethodLabel;
+  final String renewal;
+  final String paymentMethod;
+  final PlanModel plan;
 
-  Subscription toDomain() {
-    return Subscription(
-      planName: planName,
-      amountLabel: '${_formatAmount(amountCents, currency)}/month',
-      status: status,
-      renewalLabel: renewalDate,
-      paymentMethodLabel: paymentMethodLabel,
-    );
-  }
+  Subscription toDomain() => Subscription(
+        id: id,
+        status: status,
+        renewal: renewal,
+        paymentMethod: paymentMethod,
+        plan: plan.toDomain(),
+      );
 }
 
-class PaymentRecordModel {
-  const PaymentRecordModel({
-    required this.date,
-    required this.amountCents,
-    required this.currency,
+class PaymentModel {
+  const PaymentModel({
+    required this.id,
     required this.status,
     required this.transactionId,
+    required this.amount,
+    required this.paymentDate,
+    required this.receiptUrl,
   });
 
-  factory PaymentRecordModel.fromMap(Map<String, dynamic> map) {
-    return PaymentRecordModel(
-      date: _stringValue(map['date'], fallback: '--'),
-      amountCents: _intValue(map['amountCents']),
-      currency: _stringValue(map['currency'], fallback: 'USD'),
+  factory PaymentModel.fromMap(Map<String, dynamic> map) {
+    return PaymentModel(
+      id: _intValue(map['id']),
       status: _stringValue(map['status'], fallback: 'PAID'),
       transactionId: _stringValue(map['transactionId'], fallback: '--'),
+      amount: _doubleValue(map['amount']),
+      paymentDate: _stringValue(map['paymentDate'], fallback: '--'),
+      receiptUrl: _stringValue(map['receiptUrl'], fallback: ''),
     );
   }
 
-  final String date;
-  final int amountCents;
-  final String currency;
+  final int id;
   final String status;
   final String transactionId;
+  final double amount;
+  final String paymentDate;
+  final String receiptUrl;
 
-  PaymentRecord toDomain() {
-    return PaymentRecord(
-      date: date,
-      amountLabel: _formatAmount(amountCents, currency),
-      status: status,
-      transactionId: transactionId,
-    );
-  }
-}
-
-String _formatAmount(int amountCents, String currency) {
-  final amount = (amountCents / 100).toStringAsFixed(2);
-  final symbol = currency.toUpperCase() == 'USD' ? r'$' : '$currency ';
-  return '$symbol$amount';
+  Payment toDomain() => Payment(
+        id: id,
+        status: status,
+        transactionId: transactionId,
+        amount: amount,
+        paymentDate: paymentDate,
+        receiptUrl: receiptUrl,
+      );
 }
 
 String _stringValue(Object? value, {required String fallback}) {
   final normalized = '$value'.trim();
   if (normalized.isEmpty || normalized == 'null') {
     return fallback;
-  }
-  return normalized;
-}
-
-String? _nullableStringValue(Object? value) {
-  final normalized = '$value'.trim();
-  if (normalized.isEmpty || normalized == 'null') {
-    return null;
   }
   return normalized;
 }
@@ -104,4 +125,11 @@ int _intValue(Object? value) {
     return value.toInt();
   }
   return int.tryParse('$value') ?? 0;
+}
+
+double _doubleValue(Object? value) {
+  if (value is num) {
+    return value.toDouble();
+  }
+  return double.tryParse('$value') ?? 0;
 }

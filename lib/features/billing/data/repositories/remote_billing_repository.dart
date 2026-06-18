@@ -22,26 +22,39 @@ class RemoteBillingRepository implements BillingRepository {
       accessToken: accessToken,
       userId: userId,
     );
+    final plans = await datasource.getPlans(accessToken: accessToken);
 
     return BillingSnapshot(
       subscription: subscription.toDomain(),
       payments:
           payments.map((model) => model.toDomain()).toList(growable: false),
+      plans: plans.map((model) => model.toDomain()).toList(growable: false),
     );
   }
 
   @override
-  Future<Subscription> linkPaymentMethod({
+  Future<Subscription> changePlan({
     required String accessToken,
-    required String userId,
-    required PaymentMethodDraft draft,
+    required int subscriptionId,
+    required int newPlanId,
   }) async {
-    final model = await datasource.linkPaymentMethod(
+    final model = await datasource.changePlan(
       accessToken: accessToken,
-      userId: userId,
-      cardNumber: draft.cardNumber,
+      subscriptionId: subscriptionId,
+      newPlanId: newPlanId,
     );
+    return model.toDomain();
+  }
 
+  @override
+  Future<Subscription> cancelSubscription({
+    required String accessToken,
+    required int subscriptionId,
+  }) async {
+    final model = await datasource.cancelSubscription(
+      accessToken: accessToken,
+      subscriptionId: subscriptionId,
+    );
     return model.toDomain();
   }
 }
