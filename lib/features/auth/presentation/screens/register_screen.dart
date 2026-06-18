@@ -406,21 +406,24 @@ class _SegmentPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
+    return Row(
       children: [
-        _SegmentOption(
-          label: 'Shipping Company',
-          value: RegistrationSegment.shippingCompany,
-          selected: selected,
-          onChanged: onChanged,
+        Expanded(
+          child: _SegmentOption(
+            label: 'Shipping Company',
+            value: RegistrationSegment.shippingCompany,
+            selected: selected,
+            onChanged: onChanged,
+          ),
         ),
-        _SegmentOption(
-          label: 'Client',
-          value: RegistrationSegment.client,
-          selected: selected,
-          onChanged: onChanged,
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _SegmentOption(
+            label: 'Client',
+            value: RegistrationSegment.client,
+            selected: selected,
+            onChanged: onChanged,
+          ),
         ),
       ],
     );
@@ -444,33 +447,52 @@ class _SegmentOption extends StatelessWidget {
   Widget build(BuildContext context) {
     final isSelected = value == selected;
 
-    return InkWell(
-      onTap: onChanged == null ? null : () => onChanged!(value),
-      borderRadius: BorderRadius.circular(999),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSelected
-                  ? Icons.radio_button_checked_rounded
-                  : Icons.radio_button_off_rounded,
-              color: Colors.white,
-              size: 18,
+    return Material(
+      color: isSelected
+          ? Colors.white.withValues(alpha: 0.18)
+          : Colors.white.withValues(alpha: 0.06),
+      borderRadius: BorderRadius.circular(AppRadius.sm),
+      child: InkWell(
+        onTap: onChanged == null ? null : () => onChanged!(value),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 48),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            border: Border.all(
+              color: isSelected
+                  ? Colors.white
+                  : Colors.white.withValues(alpha: 0.4),
+              width: isSelected ? 1.6 : 1,
             ),
-            const SizedBox(width: AppSpacing.xs),
-            Text(
-              label,
-              style: const TextStyle(
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isSelected
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_off_rounded,
                 color: Colors.white,
-                fontWeight: FontWeight.w600,
+                size: 18,
               ),
-            ),
-          ],
+              const SizedBox(width: AppSpacing.xs),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

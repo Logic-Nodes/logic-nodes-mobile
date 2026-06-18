@@ -9,6 +9,12 @@ import 'package:logic_nodes_mobile/features/auth/application/use_cases/sign_in_u
 import 'package:logic_nodes_mobile/features/auth/data/datasources/mock_auth_datasource.dart';
 import 'package:logic_nodes_mobile/features/auth/data/repositories/mock_auth_repository.dart';
 import 'package:logic_nodes_mobile/features/auth/domain/entities/auth_session.dart';
+import 'package:logic_nodes_mobile/features/alerts/application/controllers/alerts_controller.dart';
+import 'package:logic_nodes_mobile/features/alerts/domain/entities/alert.dart';
+import 'package:logic_nodes_mobile/features/alerts/domain/repositories/alert_repository.dart';
+import 'package:logic_nodes_mobile/features/billing/application/controllers/billing_controller.dart';
+import 'package:logic_nodes_mobile/features/billing/domain/entities/subscription.dart';
+import 'package:logic_nodes_mobile/features/billing/domain/repositories/billing_repository.dart';
 import 'package:logic_nodes_mobile/features/home/application/controllers/home_controller.dart';
 import 'package:logic_nodes_mobile/features/home/domain/entities/home_dashboard.dart';
 import 'package:logic_nodes_mobile/features/home/domain/repositories/home_repository.dart';
@@ -37,6 +43,14 @@ void main() {
             homeRepository: _FakeHomeRepository(),
             sessionController: sessionController,
           ),
+          alertsControllerFactory: () => AlertsController(
+            alertRepository: _FakeAlertRepository(),
+            sessionController: sessionController,
+          ),
+          billingControllerFactory: () => BillingController(
+            billingRepository: _FakeBillingRepository(),
+            sessionController: sessionController,
+          ),
           sessionController: sessionController,
         ),
       ),
@@ -46,6 +60,65 @@ void main() {
     expect(find.text('Sign In'), findsOneWidget);
     expect(find.text('Backend connection'), findsOneWidget);
   });
+}
+
+class _FakeAlertRepository implements AlertRepository {
+  @override
+  Future<List<Alert>> listAlerts({required String accessToken}) async => const [];
+
+  @override
+  Future<Alert> getAlert({
+    required String accessToken,
+    required String alertId,
+  }) async =>
+      Alert(id: alertId, type: 'OTHER', status: AlertStatus.open);
+
+  @override
+  Future<Alert> resolveAlert({
+    required String accessToken,
+    required String alertId,
+  }) async =>
+      Alert(id: alertId, type: 'OTHER', status: AlertStatus.closed);
+
+  @override
+  Future<Alert> acknowledgeAlert({
+    required String accessToken,
+    required String alertId,
+  }) async =>
+      Alert(id: alertId, type: 'OTHER', status: AlertStatus.acknowledged);
+}
+
+class _FakeBillingRepository implements BillingRepository {
+  @override
+  Future<BillingSnapshot> loadBilling({
+    required String accessToken,
+    required String userId,
+  }) async {
+    return const BillingSnapshot(
+      subscription: Subscription(
+        planName: 'PROFESSIONAL',
+        amountLabel: r'$79.00/month',
+        status: 'ACTIVE',
+        renewalLabel: '07/16/2026',
+      ),
+      payments: [],
+    );
+  }
+
+  @override
+  Future<Subscription> linkPaymentMethod({
+    required String accessToken,
+    required String userId,
+    required PaymentMethodDraft draft,
+  }) async {
+    return Subscription(
+      planName: 'PROFESSIONAL',
+      amountLabel: r'$79.00/month',
+      status: 'ACTIVE',
+      renewalLabel: '07/16/2026',
+      paymentMethodLabel: draft.maskedLabel,
+    );
+  }
 }
 
 class _FakeHomeRepository implements HomeRepository {

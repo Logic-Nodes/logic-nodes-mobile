@@ -142,12 +142,21 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: Colors.white.withValues(alpha: 0.8),
                             ),
                       ),
-                      GestureDetector(
-                        onTap: widget.controller.isSubmitting
+                      TextButton(
+                        onPressed: widget.controller.isSubmitting
                             ? null
                             : () => Navigator.of(context).pushNamed(
                                   AppRoutes.register,
                                 ),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                            vertical: AppSpacing.xs,
+                          ),
+                          minimumSize: const Size(0, 44),
+                          tapTargetSize: MaterialTapTargetSize.padded,
+                        ),
                         child: const Text(
                           'Sign up here',
                           style: TextStyle(

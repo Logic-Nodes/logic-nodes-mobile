@@ -10,6 +10,7 @@ class RemoteAuthDatasource {
 
   final ApiClient apiClient;
   String? _lastRefreshToken;
+  String? _lastResetToken;
 
   Future<AuthSessionModel> signIn({
     required String email,
@@ -173,17 +174,54 @@ class RemoteAuthDatasource {
   Future<void> requestPasswordReset({
     required String email,
   }) async {
-    throw const AuthException(
-      'The current backend does not expose password recovery yet.',
-    );
+    try {
+      final response = await apiClient.post(
+        '/api/v1/authentication/forgot-password',
+        body: {
+          'email': email,
+        },
+        expectedStatusCodes: const {200},
+      );
+
+      final responseMap = _expectMap(response, 'forgot-password response');
+      final resetToken = responseMap['resetToken'];
+      _lastResetToken =
+          resetToken is String && resetToken.trim().isNotEmpty
+              ? resetToken
+              : null;
+    } on ApiException catch (exception) {
+      throw AuthException(exception.message);
+    } on AppException catch (exception) {
+      throw AuthException(exception.message);
+    }
   }
 
   Future<void> resetPassword({
     required String password,
   }) async {
-    throw const AuthException(
-      'The current backend does not expose password reset yet.',
-    );
+    final resetToken = _lastResetToken;
+    if (resetToken == null) {
+      throw const AuthException(
+        'We could not match that email to an account. Request the recovery '
+        'instructions again to continue.',
+      );
+    }
+
+    try {
+      await apiClient.post(
+        '/api/v1/authentication/reset-password',
+        body: {
+          'resetToken': resetToken,
+          'password': password,
+        },
+        expectedStatusCodes: const {200},
+      );
+      _lastResetToken = null;
+    } on ApiException catch (exception) {
+      throw AuthException(exception.message);
+    } on AppException catch (exception) {
+      throw AuthException(exception.message);
+    }
   }
 
   Future<void> signOut() async {
