@@ -10,11 +10,15 @@ class ApiClient {
     required this.baseUrl,
     http.Client? httpClient,
     this.timeout = const Duration(seconds: 12),
+    this.getAccessToken,
+    this.onUnauthorized,
   }) : _httpClient = httpClient ?? http.Client();
 
   final String baseUrl;
   final http.Client _httpClient;
   final Duration timeout;
+  final String? Function()? getAccessToken;
+  final Future<bool> Function()? onUnauthorized;
 
   Uri endpoint(
     String path, {
@@ -28,12 +32,14 @@ class ApiClient {
   Future<Object?> get(
     String path, {
     Map<String, String>? headers,
+    Map<String, String>? queryParameters,
     Set<int> expectedStatusCodes = const {200},
   }) {
     return _request(
       'GET',
       path,
       headers: headers,
+      queryParameters: queryParameters,
       expectedStatusCodes: expectedStatusCodes,
     );
   }
@@ -103,14 +109,23 @@ class ApiClient {
     String path, {
     Object? body,
     Map<String, String>? headers,
+    Map<String, String>? queryParameters,
     required Set<int> expectedStatusCodes,
+    bool hasRetriedAuth = false,
   }) async {
-    final uri = endpoint(path);
+    final uri = endpoint(path, queryParameters: queryParameters);
     final requestHeaders = <String, String>{
       'Accept': 'application/json',
       if (body != null) 'Content-Type': 'application/json',
       ...?headers,
     };
+
+    if (hasRetriedAuth) {
+      final accessToken = getAccessToken?.call();
+      if (accessToken != null && accessToken.isNotEmpty) {
+        requestHeaders['Authorization'] = 'Bearer $accessToken';
+      }
+    }
 
     late http.Response response;
 
@@ -155,6 +170,24 @@ class ApiClient {
       throw AppException('Unable to reach $uri. $exception');
     }
 
+    if (response.statusCode == 401 &&
+        !hasRetriedAuth &&
+        onUnauthorized != null &&
+        _shouldRetryAuth(path)) {
+      final refreshed = await onUnauthorized!();
+      if (refreshed) {
+        return _request(
+          method,
+          path,
+          body: body,
+          headers: headers,
+          queryParameters: queryParameters,
+          expectedStatusCodes: expectedStatusCodes,
+          hasRetriedAuth: true,
+        );
+      }
+    }
+
     final responseBody = _decodeBody(response.body);
 
     if (!expectedStatusCodes.contains(response.statusCode)) {
@@ -167,6 +200,10 @@ class ApiClient {
     }
 
     return responseBody;
+  }
+
+  bool _shouldRetryAuth(String path) {
+    return !path.startsWith('/api/v1/authentication/');
   }
 
   Object? _decodeBody(String rawBody) {

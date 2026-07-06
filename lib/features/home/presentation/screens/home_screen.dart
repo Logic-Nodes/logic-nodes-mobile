@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/offline_banner.dart';
 import '../../../../core/network/api_environment.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/utils/design_tokens.dart';
@@ -7,6 +8,7 @@ import '../../../../core/utils/omnitrack_logo.dart';
 import '../../../auth/application/controllers/session_controller.dart';
 import '../../../auth/domain/entities/auth_session.dart';
 import '../../../auth/domain/entities/auth_user.dart';
+import '../../../billing/application/controllers/billing_controller.dart';
 import '../../application/controllers/home_controller.dart';
 import '../../domain/entities/home_dashboard.dart';
 
@@ -14,11 +16,13 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({
     required this.controller,
     required this.sessionController,
+    required this.billingController,
     super.key,
   });
 
   final HomeController controller;
   final SessionController sessionController;
+  final BillingController billingController;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -31,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     widget.controller.load();
+    widget.billingController.load();
   }
 
   @override
@@ -50,6 +55,18 @@ class _HomeScreenState extends State<HomeScreen> {
       AppRoutes.login,
       (route) => false,
     );
+  }
+
+  String? _moduleRoute(String label) {
+    return switch (label) {
+      'Dashboard' => AppRoutes.analytics,
+      'Fleet' => AppRoutes.fleetVehicles,
+      'Trips' => AppRoutes.trips,
+      'Alerts' => AppRoutes.alerts,
+      'Monitoring' => AppRoutes.analytics,
+      'Billing' => AppRoutes.subscription,
+      _ => null,
+    };
   }
 
   @override
@@ -162,6 +179,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
+                  if (dashboard.isFromCache)
+                    const Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: OfflineBanner(
+                        message:
+                            'Modo offline: datos desde SQLite. Se actualizaran al reconectar.',
+                      ),
+                    ),
                   if (widget.controller.isLoading)
                     const Align(
                       alignment: Alignment.topCenter,
@@ -249,6 +276,13 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: AppSpacing.md),
           _MetricGrid(metrics: _metricsFor(user.role, dashboard)),
           const SizedBox(height: AppSpacing.lg),
+          FilledButton.icon(
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.analytics),
+            icon: const Icon(Icons.analytics_outlined),
+            label: const Text('Open analytics dashboard'),
+          ),
+          const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
             title: 'Focus Today',
             description: 'Puntos de atencion calculados desde el estado actual del backend.',
@@ -272,6 +306,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 _AccessChip(
                   icon: module.icon,
                   label: module.label,
+                  onTap: () {
+                    final route = _moduleRoute(module.label);
+                    if (route != null) {
+                      Navigator.of(context).pushNamed(route);
+                    }
+                  },
                 ),
             ],
           ),
@@ -308,6 +348,33 @@ class _HomeScreenState extends State<HomeScreen> {
                 : Icons.route_rounded,
           ),
           const SizedBox(height: AppSpacing.lg),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              if (user.role == UserRole.fleetManager) ...[
+                FilledButton.icon(
+                  onPressed: () =>
+                      Navigator.of(context).pushNamed(AppRoutes.fleetVehicles),
+                  icon: const Icon(Icons.local_shipping_outlined),
+                  label: const Text('Gestionar vehiculos'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () =>
+                      Navigator.of(context).pushNamed(AppRoutes.fleetDevices),
+                  icon: const Icon(Icons.sensors_outlined),
+                  label: const Text('Dispositivos IoT'),
+                ),
+              ],
+              FilledButton.icon(
+                onPressed: () =>
+                    Navigator.of(context).pushNamed(AppRoutes.trips),
+                icon: const Icon(Icons.route_outlined),
+                label: const Text('Gestionar viajes'),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
           _SectionHeading(
             title: user.role == UserRole.fleetManager
                 ? 'Routes In Motion'
@@ -315,8 +382,23 @@ class _HomeScreenState extends State<HomeScreen> {
             description: 'Tarjetas alimentadas con los viajes retornados por la API.',
           ),
           const SizedBox(height: AppSpacing.md),
+          FilledButton.icon(
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.analytics),
+            icon: const Icon(Icons.analytics_outlined),
+            label: const Text('Open analytics dashboard'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
           for (final card in cards) ...[
-            _ProgressCard(card: card),
+            _ProgressCard(
+              card: card,
+              onTap: card.tripId == null
+                  ? null
+                  : () => Navigator.of(context).pushNamed(
+                        AppRoutes.analyticsTripDetail,
+                        arguments: card.tripId,
+                      ),
+            ),
             const SizedBox(height: AppSpacing.sm),
           ],
           const SizedBox(height: AppSpacing.lg),
@@ -443,138 +525,104 @@ class _HomeScreenState extends State<HomeScreen> {
   ) {
     final usageStats = _billingUsageStats(dashboard);
 
-    return _ScrollablePage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _WorkspaceHero(
-            title: 'Billing & Plan',
-            description:
-                'Vista de estado del modulo de billing desde la perspectiva del backend actual.',
-            roleLabel: user.role.label,
-            companyLabel: user.companyName ?? 'Personal workspace',
-          ),
-          const SizedBox(height: AppSpacing.md),
-          FilledButton.icon(
-            onPressed: () =>
-                Navigator.of(context).pushNamed(AppRoutes.subscription),
-            icon: const Icon(Icons.receipt_long_rounded),
-            label: const Text('Manage subscription & payments'),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        height: 52,
-                        width: 52,
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
+    return AnimatedBuilder(
+      animation: widget.billingController,
+      builder: (context, _) {
+        final billing = widget.billingController;
+        final subscription = billing.subscription;
+
+        return _ScrollablePage(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _WorkspaceHero(
+                title: 'Billing & Plan',
+                description:
+                    'Suscripcion y pagos cargados desde /api/v1/subscription y /api/v1/payments.',
+                roleLabel: user.role.label,
+                companyLabel: user.companyName ?? 'Personal workspace',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              FilledButton.icon(
+                onPressed: () =>
+                    Navigator.of(context).pushNamed(AppRoutes.subscription),
+                icon: const Icon(Icons.receipt_long_rounded),
+                label: const Text('Manage subscription & payments'),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              if (billing.isLoading && subscription == null)
+                const Center(child: CircularProgressIndicator())
+              else if (subscription != null)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          subscription.plan.name,
+                          style: Theme.of(context).textTheme.headlineSmall,
                         ),
-                        child: const Icon(
-                          Icons.sync_problem_rounded,
-                          color: AppColors.secondary,
+                        const SizedBox(height: AppSpacing.xxs),
+                        Text(
+                          subscription.plan.priceLabel,
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        const SizedBox(height: AppSpacing.md),
+                        Row(
                           children: [
-                            Text(
-                              'Billing backend not exposed',
-                              style: Theme.of(context).textTheme.titleLarge,
+                            Expanded(
+                              child: _KeyValueItem(
+                                label: 'Status',
+                                value: subscription.status,
+                              ),
                             ),
-                            const SizedBox(height: AppSpacing.xxs),
-                            Text(
-                              'El backend actual no publica endpoints de suscripcion, renovacion ni facturas. Esta vista evita mostrar datos inventados.',
-                              style: Theme.of(context).textTheme.bodyMedium,
+                            Expanded(
+                              child: _KeyValueItem(
+                                label: 'Renewal',
+                                value: subscription.renewal,
+                              ),
+                            ),
+                            Expanded(
+                              child: _KeyValueItem(
+                                label: 'Payments',
+                                value: '${billing.payments.length}',
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  const Row(
-                    children: [
-                      Expanded(
-                        child: _KeyValueItem(
-                          label: 'Module status',
-                          value: 'Unavailable',
-                        ),
-                      ),
-                      Expanded(
-                        child: _KeyValueItem(
-                          label: 'Source',
-                          value: 'Current backend',
-                        ),
-                      ),
-                      Expanded(
-                        child: _KeyValueItem(
-                          label: 'Fallback',
-                          value: 'Usage only',
-                        ),
-                      ),
-                    ],
+                )
+              else
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Text(
+                      billing.errorMessage ??
+                          'No subscription data returned by the backend yet.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                   ),
+                ),
+              const SizedBox(height: AppSpacing.lg),
+              const _SectionHeading(
+                title: 'Usage Snapshot',
+                description: 'Consumo operativo visible desde trips, devices y alertas.',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  for (final stat in usageStats) _MiniStatCard(stat: stat),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          const _SectionHeading(
-            title: 'Usage Snapshot',
-            description: 'Consumo real que si puede medirse con el backend disponible.',
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: [
-              for (final stat in usageStats) _MiniStatCard(stat: stat),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
-          const _SectionHeading(
-            title: 'Available Data',
-            description: 'Lo que si puede visualizar hoy esta pantalla desde la API.',
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                children: [
-                  _ChecklistTile(
-                    icon: Icons.route_outlined,
-                    title:
-                        'Trips, ordenes de entrega y alertas si se leen desde el backend real.',
-                  ),
-                  const Divider(height: AppSpacing.lg),
-                  _ChecklistTile(
-                    icon: Icons.sensors_outlined,
-                    title:
-                        'Vehiculos, dispositivos y sesiones activas alimentan el resumen operativo.',
-                  ),
-                  const Divider(height: AppSpacing.lg),
-                  _ChecklistTile(
-                    icon: Icons.info_outline_rounded,
-                    title:
-                        'Facturacion y suscripciones quedan pendientes hasta que el backend exponga ese modulo.',
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -700,6 +748,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 title: Text(module.label),
                 subtitle: Text(module.description),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {
+                  final route = _moduleRoute(module.label);
+                  if (route != null) {
+                    Navigator.of(context).pushNamed(route);
+                  }
+                },
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -710,6 +765,36 @@ class _HomeScreenState extends State<HomeScreen> {
             description: 'Pantallas del flujo mobile alineadas al reporte.',
           ),
           const SizedBox(height: AppSpacing.md),
+          FilledButton.icon(
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.profile),
+            icon: const Icon(Icons.person_outline_rounded),
+            label: const Text('Editar perfil'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          OutlinedButton.icon(
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.analytics),
+            icon: const Icon(Icons.analytics_outlined),
+            label: const Text('Open analytics dashboard'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          OutlinedButton.icon(
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.trips),
+            icon: const Icon(Icons.route_outlined),
+            label: const Text('Gestionar viajes'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          if (user.role == UserRole.fleetManager) ...[
+            OutlinedButton.icon(
+              onPressed: () =>
+                  Navigator.of(context).pushNamed(AppRoutes.fleetVehicles),
+              icon: const Icon(Icons.local_shipping_outlined),
+              label: const Text('Gestionar flota'),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
           OutlinedButton.icon(
             onPressed: () =>
                 Navigator.of(context).pushNamed(AppRoutes.alerts),
@@ -1033,6 +1118,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ? 'No delivery orders'
             : '${trip.deliveredOrders}/${trip.deliveryOrders.length} delivered',
         accent: _statusAccent(trip.status),
+        tripId: trip.id,
       );
     }).toList(growable: false);
   }
@@ -1735,37 +1821,43 @@ class _AccessChip extends StatelessWidget {
   const _AccessChip({
     required this.icon,
     required this.label,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.border),
+        side: const BorderSide(color: AppColors.border),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 18, color: AppColors.primary),
-            const SizedBox(width: AppSpacing.xs),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.ink,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ],
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.ink,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1829,37 +1921,44 @@ class _InfoBanner extends StatelessWidget {
 }
 
 class _ProgressCard extends StatelessWidget {
-  const _ProgressCard({required this.card});
+  const _ProgressCard({
+    required this.card,
+    this.onTap,
+  });
 
   final _ProgressCardData card;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        card.title,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: AppSpacing.xxs),
-                      Text(
-                        card.subtitle,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          card.title,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.xxs),
+                        Text(
+                          card.subtitle,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 const SizedBox(width: AppSpacing.md),
                 _PillTag(
                   label: card.trailingLabel,
@@ -1899,6 +1998,7 @@ class _ProgressCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -2291,6 +2391,7 @@ class _ProgressCardData {
     required this.trailingLabel,
     required this.tag,
     required this.accent,
+    this.tripId,
   });
 
   final String title;
@@ -2299,6 +2400,7 @@ class _ProgressCardData {
   final String trailingLabel;
   final String tag;
   final Color accent;
+  final String? tripId;
 }
 
 class _MiniStatData {

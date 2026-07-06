@@ -5,4 +5,13 @@ abstract final class AppRoutes {
   static const home = '/home';
   static const alerts = '/alerts';
   static const subscription = '/subscription';
+  static const analytics = '/analytics';
+  static const analyticsTrips = '/analytics/trips';
+  static const analyticsTripDetail = '/analytics/trips/detail';
+  static const fleetVehicles = '/fleet/vehicles';
+  static const fleetDevices = '/fleet/devices';
+  static const trips = '/trips';
+  static const tripForm = '/trips/new';
+  static const tripDetail = '/trips/detail';
+  static const profile = '/profile';
 }

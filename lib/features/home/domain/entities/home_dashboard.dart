@@ -8,6 +8,7 @@ class HomeDashboard {
     required this.loadedAt,
     required this.scopeApplied,
     this.scopeNotice,
+    this.isFromCache = false,
   });
 
   final List<HomeTrip> trips;
@@ -18,6 +19,31 @@ class HomeDashboard {
   final DateTime loadedAt;
   final bool scopeApplied;
   final String? scopeNotice;
+  final bool isFromCache;
+
+  HomeDashboard copyWith({
+    List<HomeTrip>? trips,
+    List<HomeAlert>? alerts,
+    List<HomeVehicle>? vehicles,
+    List<HomeDevice>? devices,
+    List<HomeMonitoringSession>? activeSessions,
+    DateTime? loadedAt,
+    bool? scopeApplied,
+    String? scopeNotice,
+    bool? isFromCache,
+  }) {
+    return HomeDashboard(
+      trips: trips ?? this.trips,
+      alerts: alerts ?? this.alerts,
+      vehicles: vehicles ?? this.vehicles,
+      devices: devices ?? this.devices,
+      activeSessions: activeSessions ?? this.activeSessions,
+      loadedAt: loadedAt ?? this.loadedAt,
+      scopeApplied: scopeApplied ?? this.scopeApplied,
+      scopeNotice: scopeNotice ?? this.scopeNotice,
+      isFromCache: isFromCache ?? this.isFromCache,
+    );
+  }
 
   int get totalTrips => trips.length;
   int get plannedTrips =>

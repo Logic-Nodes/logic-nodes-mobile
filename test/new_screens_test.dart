@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:logic_nodes_mobile/core/utils/app_theme.dart';
 import 'package:logic_nodes_mobile/features/alerts/application/controllers/alerts_controller.dart';
 import 'package:logic_nodes_mobile/features/alerts/domain/entities/alert.dart';
+import 'package:logic_nodes_mobile/features/alerts/domain/entities/incident.dart';
+import 'package:logic_nodes_mobile/features/alerts/domain/entities/notification.dart';
 import 'package:logic_nodes_mobile/features/alerts/domain/repositories/alert_repository.dart';
 import 'package:logic_nodes_mobile/features/auth/application/controllers/session_controller.dart';
 import 'package:logic_nodes_mobile/features/auth/data/datasources/mock_auth_datasource.dart';
@@ -17,7 +19,7 @@ import 'package:logic_nodes_mobile/core/storage/memory_store.dart';
 
 Future<SessionController> _signedInSession() async {
   final sessionController = SessionController(
-    sessionStore: MemoryStore<AuthSession>(),
+    sessionStore: MemorySessionStore(),
     authRepository: MockAuthRepository(datasource: MockAuthDatasource()),
   );
   await sessionController.open(
@@ -85,7 +87,7 @@ void main() {
     final authRepository =
         MockAuthRepository(datasource: MockAuthDatasource());
     final sessionController = SessionController(
-      sessionStore: MemoryStore<AuthSession>(),
+      sessionStore: MemorySessionStore(),
       authRepository: authRepository,
     );
     final session = await authRepository.signIn(
@@ -132,11 +134,41 @@ class _SeededAlertRepository implements AlertRepository {
       List<Alert>.from(_alerts);
 
   @override
+  Future<List<Alert>> listAlertsByType({
+    required String accessToken,
+    required String type,
+  }) async =>
+      _alerts.where((alert) => alert.type == type).toList(growable: false);
+
+  @override
+  Future<List<Alert>> listAlertsByStatus({
+    required String accessToken,
+    required String status,
+  }) async =>
+      _alerts
+          .where((alert) => alert.status.name.toUpperCase() == status)
+          .toList(growable: false);
+
+  @override
   Future<Alert> getAlert({
     required String accessToken,
     required String alertId,
   }) async =>
       _alerts.firstWhere((alert) => alert.id == alertId);
+
+  @override
+  Future<List<Incident>> listIncidentsByAlert({
+    required String accessToken,
+    required String alertId,
+  }) async =>
+      const [];
+
+  @override
+  Future<List<AlertNotification>> listNotificationsByAlert({
+    required String accessToken,
+    required String alertId,
+  }) async =>
+      const [];
 
   @override
   Future<Alert> resolveAlert({

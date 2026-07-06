@@ -1,3 +1,4 @@
+import '../../../../core/utils/json_parse.dart';
 import '../../domain/entities/home_dashboard.dart';
 
 class HomeDashboardModel {
@@ -172,8 +173,8 @@ class HomeAlertModel {
     return HomeAlertModel(
       id: _stringValue(map['id']),
       deliveryOrderId: _nullableStringValue(map['deliveryOrderId']),
-      type: _stringValue(map['alertType']).toUpperCase(),
-      status: _stringValue(map['alertStatus']).toUpperCase(),
+      type: _stringValue(map['alertType'] ?? map['type']).toUpperCase(),
+      status: _stringValue(map['alertStatus'] ?? map['status']).toUpperCase(),
       createdAt: _dateValue(map['createdAt']),
       updatedAt: _dateValue(map['updatedAt']),
     );
@@ -216,7 +217,7 @@ class HomeVehicleModel {
       plate: _stringValue(map['plate']),
       type: _stringValue(map['type']).toUpperCase(),
       status: _stringValue(map['status']).toUpperCase(),
-      odometerKm: map['odometerKm'] as num?,
+      odometerKm: nullableNumValue(map['odometerKm']),
       deviceImeis: rawDeviceImeis is List
           ? rawDeviceImeis
               .map((value) => _nullableStringValue(value))

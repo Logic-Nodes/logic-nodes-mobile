@@ -258,10 +258,12 @@ class _DemoAccessCard extends StatelessWidget {
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
-            child: const Padding(
-              padding: EdgeInsets.all(AppSpacing.md),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: Text(
-                'Use Sign up to create a real account in the existing backend. For Android emulator the default URL is 10.0.2.2:3000.',
+                'La app usa el backend de producción en ${ApiEnvironment.productionBaseUrl}. '
+                'Usa Sign up para crear una cuenta real. '
+                '${ApiEnvironment.localDevDartDefineHint}',
               ),
             ),
           ),

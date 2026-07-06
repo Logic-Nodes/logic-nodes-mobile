@@ -1,6 +1,7 @@
 import '../../domain/entities/auth_session.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/remote_auth_datasource.dart';
+import '../models/auth_session_model.dart';
 
 class RemoteAuthRepository implements AuthRepository {
   RemoteAuthRepository({
@@ -75,7 +76,33 @@ class RemoteAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> signOut() {
-    return datasource.signOut();
+  Future<AuthSession> refreshSession({
+    required AuthSession currentSession,
+  }) async {
+    final currentModel = AuthSessionModel.fromDomain(currentSession);
+    final refreshed = await datasource.refreshSession(
+      refreshToken: currentSession.refreshToken,
+      user: currentModel.user,
+    );
+
+    return refreshed.toDomain();
+  }
+
+  @override
+  Future<void> signOut({
+    String? refreshToken,
+  }) {
+    return datasource.signOut(refreshToken: refreshToken);
+  }
+
+  @override
+  Future<void> signOutAll({
+    required String accessToken,
+    required String userId,
+  }) {
+    return datasource.signOutAll(
+      accessToken: accessToken,
+      userId: userId,
+    );
   }
 }
