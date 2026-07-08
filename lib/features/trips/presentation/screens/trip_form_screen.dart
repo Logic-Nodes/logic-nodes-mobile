@@ -31,7 +31,7 @@ class _TripFormScreenState extends State<TripFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create trip'),
+        title: const Text('Crear viaje'),
       ),
       body: AnimatedBuilder(
         animation: widget.controller,
@@ -42,12 +42,12 @@ class _TripFormScreenState extends State<TripFormScreen> {
             padding: const EdgeInsets.all(AppSpacing.md),
             children: [
               Text(
-                'Plan a new route',
+                'Planifica una nueva ruta',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'Merchant and driver IDs are taken from your session.',
+                'Los IDs de comerciante y conductor se toman de tu sesión.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.inkMuted,
                     ),
@@ -56,7 +56,7 @@ class _TripFormScreenState extends State<TripFormScreen> {
               DropdownButtonFormField<String>(
                 value: _vehicleId,
                 decoration: const InputDecoration(
-                  labelText: 'Vehicle',
+                  labelText: 'Vehículo',
                   border: OutlineInputBorder(),
                 ),
                 items: controller.vehicles
@@ -73,7 +73,7 @@ class _TripFormScreenState extends State<TripFormScreen> {
               DropdownButtonFormField<String>(
                 value: _deviceId,
                 decoration: const InputDecoration(
-                  labelText: 'Device',
+                  labelText: 'Dispositivo',
                   border: OutlineInputBorder(),
                 ),
                 items: controller.devices
@@ -92,7 +92,7 @@ class _TripFormScreenState extends State<TripFormScreen> {
               DropdownButtonFormField<String>(
                 value: _originPointId,
                 decoration: const InputDecoration(
-                  labelText: 'Origin point',
+                  labelText: 'Punto de origen',
                   border: OutlineInputBorder(),
                 ),
                 items: controller.originPoints
@@ -129,7 +129,7 @@ class _TripFormScreenState extends State<TripFormScreen> {
                         ),
                       )
                     : const Icon(Icons.check_rounded),
-                label: const Text('Create trip'),
+                label: const Text('Crear viaje'),
               ),
             ],
           );
@@ -153,7 +153,7 @@ class _TripFormScreenState extends State<TripFormScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            widget.controller.errorMessage ?? 'Unable to create the trip.',
+            widget.controller.errorMessage ?? 'No se pudo crear el viaje.',
           ),
         ),
       );

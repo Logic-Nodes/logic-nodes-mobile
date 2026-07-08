@@ -164,4 +164,25 @@ class RemoteTripsRepository implements TripsRepository {
     final models = await datasource.listDevices(accessToken: accessToken);
     return models.map((model) => model.toDomain()).toList(growable: false);
   }
+
+  @override
+  Future<HomeTrip> rescheduleTrip({
+    required String accessToken,
+    required String tripId,
+    required RescheduleTripRequest request,
+  }) async {
+    final model = await datasource.rescheduleTrip(
+      accessToken: accessToken,
+      tripId: tripId,
+      request: request,
+    );
+    return model.toDomain();
+  }
+
+  @override
+  Future<PublicTripTracking> getPublicTripByTrackingCode({
+    required String trackingCode,
+  }) {
+    return datasource.getPublicTripByTrackingCode(trackingCode: trackingCode);
+  }
 }

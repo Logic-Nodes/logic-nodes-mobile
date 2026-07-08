@@ -201,6 +201,35 @@ class RemoteTripsDatasource {
         .toList(growable: false);
   }
 
+  Future<HomeTripModel> rescheduleTrip({
+    required String accessToken,
+    required String tripId,
+    required RescheduleTripRequest request,
+  }) async {
+    final response = await _patch(
+      '/api/v1/trips/$tripId',
+      accessToken: accessToken,
+      body: request.toJson(),
+    );
+
+    return HomeTripModel.fromMap(expectMap(response, 'trip'));
+  }
+
+  Future<PublicTripTracking> getPublicTripByTrackingCode({
+    required String trackingCode,
+  }) async {
+    try {
+      final response = await apiClient.get(
+        '/api/v1/trips/public/${Uri.encodeComponent(trackingCode.trim())}',
+        expectedStatusCodes: const {200},
+      );
+
+      return PublicTripTracking.fromMap(expectMap(response, 'public trip'));
+    } on ApiException catch (exception) {
+      throw AppException(exception.message);
+    }
+  }
+
   List<HomeTripModel> _parseTrips(Object? response) {
     return expectList(response, 'trips')
         .whereType<Map<String, dynamic>>()
@@ -252,6 +281,24 @@ class RemoteTripsDatasource {
       await apiClient.delete(
         path,
         headers: authHeaders(accessToken),
+        expectedStatusCodes: expectedStatusCodes,
+      );
+    } on ApiException catch (exception) {
+      throw AppException(exception.message);
+    }
+  }
+
+  Future<Object?> _patch(
+    String path, {
+    required String accessToken,
+    Object? body,
+    Set<int> expectedStatusCodes = const {200},
+  }) async {
+    try {
+      return await apiClient.patch(
+        path,
+        headers: authHeaders(accessToken),
+        body: body,
         expectedStatusCodes: expectedStatusCodes,
       );
     } on ApiException catch (exception) {

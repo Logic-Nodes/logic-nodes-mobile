@@ -104,3 +104,82 @@ class CreateOriginPointRequest {
   final num? latitude;
   final num? longitude;
 }
+
+class RescheduleTripRequest {
+  const RescheduleTripRequest({
+    this.originPointId,
+    this.deviceId,
+    this.vehicleId,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (originPointId != null) 'originPointId': originPointId,
+      if (deviceId != null) 'deviceId': deviceId,
+      if (vehicleId != null) 'vehicleId': vehicleId,
+    };
+  }
+
+  final String? originPointId;
+  final String? deviceId;
+  final String? vehicleId;
+}
+
+class PublicTelemetrySnapshot {
+  const PublicTelemetrySnapshot({
+    this.temperature,
+    this.humidity,
+    this.latitude,
+    this.longitude,
+    this.recordedAt,
+  });
+
+  factory PublicTelemetrySnapshot.fromMap(Map<String, dynamic> map) {
+    return PublicTelemetrySnapshot(
+      temperature: nullableNumValue(map['temperature']),
+      humidity: nullableNumValue(map['humidity']),
+      latitude: nullableNumValue(map['latitude']),
+      longitude: nullableNumValue(map['longitude']),
+      recordedAt: dateValue(map['createdAt']),
+    );
+  }
+
+  final num? temperature;
+  final num? humidity;
+  final num? latitude;
+  final num? longitude;
+  final DateTime? recordedAt;
+}
+
+class PublicTripTracking {
+  const PublicTripTracking({
+    required this.trackingCode,
+    required this.status,
+    this.origin,
+    this.startedAt,
+    this.completedAt,
+    this.lastTelemetry,
+  });
+
+  factory PublicTripTracking.fromMap(Map<String, dynamic> map) {
+    final rawTelemetry = map['lastTelemetry'];
+
+    return PublicTripTracking(
+      trackingCode: stringValue(map['trackingCode']),
+      status: stringValue(map['status']).toUpperCase(),
+      origin: nullableStringValue(map['origin']),
+      startedAt: dateValue(map['startedAt']),
+      completedAt: dateValue(map['completedAt']),
+      lastTelemetry: rawTelemetry is Map<String, dynamic>
+          ? PublicTelemetrySnapshot.fromMap(rawTelemetry)
+          : null,
+    );
+  }
+
+  final String trackingCode;
+  final String status;
+  final String? origin;
+  final DateTime? startedAt;
+  final DateTime? completedAt;
+  final PublicTelemetrySnapshot? lastTelemetry;
+}

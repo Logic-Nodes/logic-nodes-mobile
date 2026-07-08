@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/utils/design_tokens.dart';
+import '../../../../core/utils/status_labels.dart';
 import '../../../home/domain/entities/home_dashboard.dart';
 import '../../application/controllers/trips_controller.dart';
 
@@ -28,10 +29,16 @@ class _TripsScreenState extends State<TripsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Trips'),
+        title: const Text('Viajes'),
         actions: [
           IconButton(
-            tooltip: 'Refresh',
+            tooltip: 'Rastrear por código',
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.publicTracking),
+            icon: const Icon(Icons.qr_code_2_outlined),
+          ),
+          IconButton(
+            tooltip: 'Actualizar',
             onPressed: widget.controller.isLoading ? null : widget.controller.load,
             icon: const Icon(Icons.refresh_rounded),
           ),
@@ -40,7 +47,7 @@ class _TripsScreenState extends State<TripsScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.of(context).pushNamed(AppRoutes.tripForm),
         icon: const Icon(Icons.add_rounded),
-        label: const Text('New trip'),
+        label: const Text('Nuevo viaje'),
       ),
       body: AnimatedBuilder(
         animation: widget.controller,
@@ -80,7 +87,7 @@ class _TripsScreenState extends State<TripsScreen> {
                     padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
                     child: Center(
                       child: Text(
-                        'No trips match the current filters.',
+                        'No hay viajes que coincidan con los filtros actuales.',
                         style: TextStyle(color: AppColors.inkMuted),
                       ),
                     ),
@@ -117,7 +124,7 @@ class _DateFilterBar extends StatelessWidget {
     final from = controller.dateFrom;
     final to = controller.dateTo;
     final label = from == null && to == null
-        ? 'All dates'
+        ? 'Todas las fechas'
         : '${_format(from)} → ${_format(to)}';
 
     return Row(
@@ -132,7 +139,7 @@ class _DateFilterBar extends StatelessWidget {
         if (from != null || to != null) ...[
           const SizedBox(width: AppSpacing.sm),
           IconButton(
-            tooltip: 'Clear dates',
+            tooltip: 'Limpiar fechas',
             onPressed: controller.clearDateRange,
             icon: const Icon(Icons.clear_rounded),
           ),
@@ -218,10 +225,10 @@ class _TripCard extends StatelessWidget {
           backgroundColor: AppColors.primary.withValues(alpha: 0.1),
           child: const Icon(Icons.local_shipping_outlined, color: AppColors.primary),
         ),
-        title: Text('Trip #${trip.id}'),
+        title: Text('Viaje #${trip.id}'),
         subtitle: Text(
           [
-            trip.status,
+            StatusLabels.tripStatus(trip.status),
             if (trip.originPointName != null) trip.originPointName!,
             if (trip.createdAt != null) _formatDate(trip.createdAt!),
           ].join(' · '),

@@ -13,5 +13,7 @@ abstract final class AppRoutes {
   static const trips = '/trips';
   static const tripForm = '/trips/new';
   static const tripDetail = '/trips/detail';
+  static const tripReschedule = '/trips/reschedule';
+  static const publicTracking = '/tracking';
   static const profile = '/profile';
 }

@@ -16,15 +16,15 @@ enum TripStatusFilter {
   String get label {
     switch (this) {
       case TripStatusFilter.all:
-        return 'All';
+        return 'Todos';
       case TripStatusFilter.planned:
-        return 'Planned';
+        return 'Planificado';
       case TripStatusFilter.inProgress:
-        return 'In progress';
+        return 'En curso';
       case TripStatusFilter.completed:
-        return 'Completed';
+        return 'Completado';
       case TripStatusFilter.cancelled:
-        return 'Cancelled';
+        return 'Cancelado';
     }
   }
 
@@ -171,7 +171,7 @@ class TripsController extends ChangeNotifier {
     } on AppException catch (exception) {
       _errorMessage = exception.message;
     } on Exception {
-      _errorMessage = 'Unable to load trips from the backend.';
+      _errorMessage = 'No se pudieron cargar los viajes desde el backend.';
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -229,7 +229,7 @@ class TripsController extends ChangeNotifier {
     } on AppException catch (exception) {
       _errorMessage = exception.message;
     } on Exception {
-      _errorMessage = 'Unable to load trip details.';
+      _errorMessage = 'No se pudieron cargar los detalles del viaje.';
     } finally {
       _isLoadingDetail = false;
       notifyListeners();
@@ -353,6 +353,83 @@ class TripsController extends ChangeNotifier {
       _isSubmitting = false;
       notifyListeners();
     }
+  }
+
+  Future<bool> rescheduleTrip({
+    required String tripId,
+    String? originPointId,
+    String? deviceId,
+    String? vehicleId,
+  }) async {
+    final session = sessionController.session;
+    if (session == null || _isSubmitting) {
+      return false;
+    }
+
+    _isSubmitting = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final updated = await tripsRepository.rescheduleTrip(
+        accessToken: session.accessToken,
+        tripId: tripId,
+        request: RescheduleTripRequest(
+          originPointId: originPointId,
+          deviceId: deviceId,
+          vehicleId: vehicleId,
+        ),
+      );
+      _selectedTrip = updated;
+      _replaceTrip(updated);
+      return true;
+    } on AppException catch (exception) {
+      _errorMessage = exception.message;
+      return false;
+    } finally {
+      _isSubmitting = false;
+      notifyListeners();
+    }
+  }
+
+  PublicTripTracking? _publicTracking;
+  bool _isLookingUpTracking = false;
+
+  PublicTripTracking? get publicTracking => _publicTracking;
+  bool get isLookingUpTracking => _isLookingUpTracking;
+
+  Future<bool> lookupPublicTracking(String trackingCode) async {
+    final normalized = trackingCode.trim();
+    if (normalized.isEmpty || _isLookingUpTracking) {
+      return false;
+    }
+
+    _isLookingUpTracking = true;
+    _errorMessage = null;
+    _publicTracking = null;
+    notifyListeners();
+
+    try {
+      _publicTracking = await tripsRepository.getPublicTripByTrackingCode(
+        trackingCode: normalized,
+      );
+      return true;
+    } on AppException catch (exception) {
+      _errorMessage = exception.message;
+      return false;
+    } on Exception {
+      _errorMessage = 'No se encontró un viaje con ese código de seguimiento.';
+      return false;
+    } finally {
+      _isLookingUpTracking = false;
+      notifyListeners();
+    }
+  }
+
+  void clearPublicTracking() {
+    _publicTracking = null;
+    _errorMessage = null;
+    notifyListeners();
   }
 
   Future<bool> markDelivery(String deliveryOrderId) async {

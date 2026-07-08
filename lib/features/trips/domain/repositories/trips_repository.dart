@@ -70,4 +70,14 @@ abstract class TripsRepository {
   Future<List<HomeDevice>> listDevices({
     required String accessToken,
   });
+
+  Future<HomeTrip> rescheduleTrip({
+    required String accessToken,
+    required String tripId,
+    required RescheduleTripRequest request,
+  });
+
+  Future<PublicTripTracking> getPublicTripByTrackingCode({
+    required String trackingCode,
+  });
 }

@@ -161,4 +161,24 @@ class CachingTripsRepository implements TripsRepository {
   }) {
     return _remote.listDevices(accessToken: accessToken);
   }
+
+  @override
+  Future<HomeTrip> rescheduleTrip({
+    required String accessToken,
+    required String tripId,
+    required RescheduleTripRequest request,
+  }) {
+    return _remote.rescheduleTrip(
+      accessToken: accessToken,
+      tripId: tripId,
+      request: request,
+    );
+  }
+
+  @override
+  Future<PublicTripTracking> getPublicTripByTrackingCode({
+    required String trackingCode,
+  }) {
+    return _remote.getPublicTripByTrackingCode(trackingCode: trackingCode);
+  }
 }

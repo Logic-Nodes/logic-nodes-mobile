@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../../../../core/routing/app_routes.dart';
 import '../../../../core/services/trip_pdf_service.dart';
 import '../../../../core/utils/design_tokens.dart';
+import '../../../../core/utils/status_labels.dart';
 import '../../../home/domain/entities/home_dashboard.dart';
 import '../../application/controllers/trips_controller.dart';
 
@@ -43,10 +46,10 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Trip details'),
+        title: const Text('Detalles del viaje'),
         actions: [
           IconButton(
-            tooltip: 'Export PDF',
+            tooltip: 'Exportar PDF',
             onPressed: _exportPdf,
             icon: const Icon(Icons.picture_as_pdf_outlined),
           ),
@@ -65,7 +68,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
           if (trip == null) {
             return Center(
               child: Text(
-                controller.errorMessage ?? 'Trip not found.',
+                controller.errorMessage ?? 'Viaje no encontrado.',
                 style: const TextStyle(color: AppColors.inkMuted),
               ),
             );
@@ -81,48 +84,90 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Trip #${trip.id}',
+                        'Viaje #${trip.id}',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      _DetailRow(label: 'Status', value: trip.status),
+                      _DetailRow(label: 'Estado', value: StatusLabels.tripStatus(trip.status)),
                       const Divider(height: AppSpacing.lg),
                       _DetailRow(
-                        label: 'Origin',
-                        value: trip.originPointName ?? 'Not set',
+                        label: 'Origen',
+                        value: trip.originPointName ?? 'No definido',
                       ),
                       const Divider(height: AppSpacing.lg),
                       _DetailRow(
-                        label: 'Address',
+                        label: 'Dirección',
                         value: trip.originPointAddress ?? '—',
                       ),
                       const Divider(height: AppSpacing.lg),
                       _DetailRow(
-                        label: 'Created',
+                        label: 'Creado',
                         value: _formatDate(trip.createdAt),
                       ),
                       const Divider(height: AppSpacing.lg),
                       _DetailRow(
-                        label: 'Started',
+                        label: 'Iniciado',
                         value: _formatDate(trip.startedAt),
                       ),
                       const Divider(height: AppSpacing.lg),
                       _DetailRow(
-                        label: 'Completed',
+                        label: 'Completado',
                         value: _formatDate(trip.completedAt),
                       ),
+                      if (trip.trackingCode != null) ...[
+                        const Divider(height: AppSpacing.lg),
+                        _DetailRow(
+                          label: 'Seguimiento',
+                          value: trip.trackingCode!,
+                        ),
+                      ],
                     ],
                   ),
                 ),
               ),
+              if (trip.trackingCode != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: trip.trackingCode!));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Código de seguimiento copiado.')),
+                    );
+                  },
+                  icon: const Icon(Icons.copy_rounded),
+                  label: const Text('Copiar código de seguimiento'),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).pushNamed(
+                    AppRoutes.publicTracking,
+                    arguments: trip.trackingCode,
+                  ),
+                  icon: const Icon(Icons.local_shipping_outlined),
+                  label: const Text('Vista previa del seguimiento público'),
+                ),
+              ],
               const SizedBox(height: AppSpacing.lg),
+              if (trip.status == 'PLANNED' || trip.status == 'IN_PROGRESS') ...[
+                OutlinedButton.icon(
+                  onPressed: controller.isSubmitting
+                      ? null
+                      : () => Navigator.of(context).pushNamed(
+                            AppRoutes.tripReschedule,
+                            arguments: trip.id,
+                          ),
+                  icon: const Icon(Icons.event_repeat_rounded),
+                  label: const Text('Reprogramar viaje'),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+              ],
               if (trip.status == 'PLANNED')
                 FilledButton.icon(
                   onPressed: controller.isSubmitting
                       ? null
                       : () => _startTrip(context, trip.id),
                   icon: const Icon(Icons.play_arrow_rounded),
-                  label: const Text('Start trip'),
+                  label: const Text('Iniciar viaje'),
                 ),
               if (trip.status == 'IN_PROGRESS') ...[
                 FilledButton.icon(
@@ -130,7 +175,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                       ? null
                       : () => _completeTrip(context, trip.id),
                   icon: const Icon(Icons.flag_rounded),
-                  label: const Text('Complete trip'),
+                  label: const Text('Completar viaje'),
                 ),
               ],
               if (trip.status == 'PLANNED' || trip.status == 'CANCELLED') ...[
@@ -140,19 +185,19 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                       ? null
                       : () => _deleteTrip(context, trip.id),
                   icon: const Icon(Icons.delete_outline_rounded),
-                  label: const Text('Delete trip'),
+                  label: const Text('Eliminar viaje'),
                 ),
               ],
               const SizedBox(height: AppSpacing.xl),
               Text(
-                'Delivery orders',
+                'Órdenes de entrega',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: AppSpacing.md),
               ...controller.deliveryOrders.map(_buildOrderTile),
               if (controller.deliveryOrders.isEmpty)
                 const Text(
-                  'No delivery orders yet.',
+                  'Aún no hay órdenes de entrega.',
                   style: TextStyle(color: AppColors.inkMuted),
                 ),
               const SizedBox(height: AppSpacing.lg),
@@ -176,7 +221,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       child: ListTile(
         title: Text(order.clientEmail),
         subtitle: Text(
-          '#${order.sequenceOrder} · ${order.status}'
+          '#${order.sequenceOrder} · ${StatusLabels.deliveryStatus(order.status)}'
           '${order.address != null ? ' · ${order.address}' : ''}',
         ),
         trailing: order.status == 'DELIVERED'
@@ -185,7 +230,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                 onPressed: widget.controller.isSubmitting
                     ? null
                     : () => _markDelivered(context, order.id),
-                child: const Text('Deliver'),
+                child: const Text('Entregar'),
               ),
       ),
     );
@@ -208,7 +253,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to export PDF: $error')),
+        SnackBar(content: Text('No se pudo exportar el PDF: $error')),
       );
     }
   }
@@ -218,7 +263,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     if (!context.mounted) {
       return;
     }
-    _showResult(context, success, 'Trip started.', 'Unable to start trip.');
+    _showResult(context, success, 'Viaje iniciado.', 'No se pudo iniciar el viaje.');
   }
 
   Future<void> _completeTrip(BuildContext context, String tripId) async {
@@ -226,7 +271,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     if (!context.mounted) {
       return;
     }
-    _showResult(context, success, 'Trip completed.', 'Unable to complete trip.');
+    _showResult(context, success, 'Viaje completado.', 'No se pudo completar el viaje.');
   }
 
   Future<void> _deleteTrip(BuildContext context, String tripId) async {
@@ -240,7 +285,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       return;
     }
 
-    _showResult(context, false, '', 'Unable to delete trip.');
+    _showResult(context, false, '', 'No se pudo eliminar el viaje.');
   }
 
   Future<void> _addDelivery(BuildContext context, String tripId) async {
@@ -264,8 +309,8 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     _showResult(
       context,
       success,
-      'Delivery order created.',
-      'Unable to create delivery order.',
+      'Orden de entrega creada.',
+      'No se pudo crear la orden de entrega.',
     );
   }
 
@@ -277,8 +322,8 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     _showResult(
       context,
       success,
-      'Delivery marked as completed.',
-      'Unable to mark delivery.',
+      'Entrega marcada como completada.',
+      'No se pudo marcar la entrega.',
     );
   }
 
@@ -369,14 +414,14 @@ class _AddDeliveryForm extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Add delivery order',
+              'Agregar orden de entrega',
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: AppSpacing.md),
             TextField(
               controller: emailController,
               decoration: const InputDecoration(
-                labelText: 'Client email',
+                labelText: 'Correo del cliente',
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.emailAddress,
@@ -385,7 +430,7 @@ class _AddDeliveryForm extends StatelessWidget {
             TextField(
               controller: addressController,
               decoration: const InputDecoration(
-                labelText: 'Address',
+                labelText: 'Dirección',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -393,7 +438,7 @@ class _AddDeliveryForm extends StatelessWidget {
             TextField(
               controller: sequenceController,
               decoration: const InputDecoration(
-                labelText: 'Sequence',
+                labelText: 'Secuencia',
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
@@ -401,7 +446,7 @@ class _AddDeliveryForm extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             FilledButton(
               onPressed: isSubmitting ? null : onSubmit,
-              child: const Text('Add order'),
+              child: const Text('Agregar orden'),
             ),
           ],
         ),

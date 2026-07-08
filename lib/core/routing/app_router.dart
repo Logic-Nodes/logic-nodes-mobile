@@ -23,8 +23,10 @@ import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/profile/application/controllers/profile_controller.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/trips/application/controllers/trips_controller.dart';
+import '../../features/trips/presentation/screens/public_tracking_screen.dart';
 import '../../features/trips/presentation/screens/trip_detail_screen.dart';
 import '../../features/trips/presentation/screens/trip_form_screen.dart';
+import '../../features/trips/presentation/screens/trip_reschedule_screen.dart';
 import '../../features/trips/presentation/screens/trips_screen.dart';
 import 'app_routes.dart';
 
@@ -180,6 +182,32 @@ class AppRouter {
           builder: (_) => TripDetailScreen(
             controller: tripsControllerFactory(),
             tripId: tripId,
+          ),
+          settings: settings,
+        );
+      case AppRoutes.tripReschedule:
+        final tripId = settings.arguments;
+        if (tripId is! String || tripId.isEmpty) {
+          return MaterialPageRoute<void>(
+            builder: (_) => TripsScreen(
+              controller: tripsControllerFactory(),
+            ),
+            settings: settings,
+          );
+        }
+        return MaterialPageRoute<void>(
+          builder: (_) => TripRescheduleScreen(
+            controller: tripsControllerFactory(),
+            tripId: tripId,
+          ),
+          settings: settings,
+        );
+      case AppRoutes.publicTracking:
+        final initialCode = settings.arguments;
+        return MaterialPageRoute<void>(
+          builder: (_) => PublicTrackingScreen(
+            controller: tripsControllerFactory(),
+            initialCode: initialCode is String ? initialCode : null,
           ),
           settings: settings,
         );
