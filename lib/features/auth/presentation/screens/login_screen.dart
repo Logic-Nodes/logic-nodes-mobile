@@ -38,9 +38,9 @@ class _LoginScreenState extends State<LoginScreen> {
       animation: widget.controller,
       builder: (context, _) {
         return AuthScaffold(
-          title: 'WELCOME',
+          title: 'BIENVENIDO',
           description:
-              'Monitor your fleet, shipments and incident response with the real OmniTrack backend.',
+              'Monitorea tu flota, envíos y respuesta ante incidentes con el backend real de OmniTrack.',
           footer: const _BackendConnectionCard(),
           child: Form(
             key: _formKey,
@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 AuthTextField(
                   controller: _emailController,
-                  label: 'Email address',
+                  label: 'Correo electrónico',
                   hintText: 'name@company.com',
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
@@ -60,8 +60,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: AppSpacing.md),
                 AuthTextField(
                   controller: _passwordController,
-                  label: 'Password',
-                  hintText: 'Enter your password',
+                  label: 'Contraseña',
+                  hintText: 'Ingresa tu contraseña',
                   obscureText: true,
                   textInputAction: TextInputAction.done,
                   prefixIcon: Icons.lock_outline_rounded,
@@ -84,7 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           activeColor: Colors.white,
                           checkColor: AppColors.primary,
                           title: const Text(
-                            'Remember me',
+                            'Recordarme',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
@@ -104,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.zero,
                       ),
-                      child: const Text('Forgot your password?'),
+                      child: const Text('¿Olvidaste tu contraseña?'),
                     ),
                   ],
                 ),
@@ -128,16 +128,29 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Sign In'),
+                      : const Text('Iniciar sesión'),
                 ),
                 const SizedBox(height: AppSpacing.md),
+                Center(
+                  child: TextButton(
+                    onPressed: widget.controller.isSubmitting
+                        ? null
+                        : () => Navigator.of(context).pushNamed(
+                              AppRoutes.publicTracking,
+                            ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Rastrear envío por código'),
+                  ),
+                ),
                 Center(
                   child: Wrap(
                     crossAxisAlignment: WrapCrossAlignment.center,
                     spacing: 4,
                     children: [
                       Text(
-                        "Don't have an account?",
+                        '¿No tienes una cuenta?',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Colors.white.withValues(alpha: 0.8),
                             ),
@@ -158,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           tapTargetSize: MaterialTapTargetSize.padded,
                         ),
                         child: const Text(
-                          'Sign up here',
+                          'Regístrate aquí',
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
@@ -198,11 +211,11 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _validateEmail(String? value) {
     final email = value?.trim() ?? '';
     if (email.isEmpty) {
-      return 'Email is required.';
+      return 'El correo es obligatorio.';
     }
 
     if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-      return 'Enter a valid email.';
+      return 'Ingresa un correo válido.';
     }
 
     return null;
@@ -211,11 +224,11 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _validatePassword(String? value) {
     final password = value?.trim() ?? '';
     if (password.isEmpty) {
-      return 'Password is required.';
+      return 'La contraseña es obligatoria.';
     }
 
     if (password.length < 8) {
-      return 'Use at least 8 characters.';
+      return 'Usa al menos 8 caracteres.';
     }
 
     return null;
@@ -239,7 +252,7 @@ class _DemoAccessCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Backend connection',
+            'Conexión al backend',
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -262,7 +275,7 @@ class _DemoAccessCard extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Text(
                 'La app usa el backend de producción en ${ApiEnvironment.productionBaseUrl}. '
-                'Usa Sign up para crear una cuenta real. '
+                'Regístrate para crear una cuenta real. '
                 '${ApiEnvironment.localDevDartDefineHint}',
               ),
             ),

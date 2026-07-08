@@ -2,6 +2,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import '../utils/status_labels.dart';
 import '../../features/home/domain/entities/home_dashboard.dart';
 
 class TripPdfService {
@@ -20,7 +21,7 @@ class TripPdfService {
           pw.Header(
             level: 0,
             child: pw.Text(
-              'OmniTrack — Trip Report',
+              'OmniTrack — Informe de viaje',
               style: pw.TextStyle(
                 fontSize: 22,
                 fontWeight: pw.FontWeight.bold,
@@ -28,18 +29,18 @@ class TripPdfService {
             ),
           ),
           pw.SizedBox(height: 12),
-          pw.Text('Trip ID: ${trip.id}'),
-          pw.Text('Status: ${trip.status}'),
+          pw.Text('ID del viaje: ${trip.id}'),
+          pw.Text('Estado: ${StatusLabels.tripStatus(trip.status)}'),
           pw.SizedBox(height: 8),
-          pw.Text('Origin: ${trip.originPointName ?? '—'}'),
-          pw.Text('Address: ${trip.originPointAddress ?? '—'}'),
+          pw.Text('Origen: ${trip.originPointName ?? '—'}'),
+          pw.Text('Dirección: ${trip.originPointAddress ?? '—'}'),
           pw.SizedBox(height: 8),
-          pw.Text('Created: ${_format(trip.createdAt)}'),
-          pw.Text('Started: ${_format(trip.startedAt)}'),
-          pw.Text('Completed: ${_format(trip.completedAt)}'),
+          pw.Text('Creado: ${_format(trip.createdAt)}'),
+          pw.Text('Iniciado: ${_format(trip.startedAt)}'),
+          pw.Text('Completado: ${_format(trip.completedAt)}'),
           pw.SizedBox(height: 16),
           pw.Text(
-            'Delivery orders (${deliveryOrders.length})',
+            'Pedidos de entrega (${deliveryOrders.length})',
             style: pw.TextStyle(
               fontSize: 16,
               fontWeight: pw.FontWeight.bold,
@@ -47,16 +48,16 @@ class TripPdfService {
           ),
           pw.SizedBox(height: 8),
           if (deliveryOrders.isEmpty)
-            pw.Text('No delivery orders recorded.')
+            pw.Text('No hay pedidos de entrega registrados.')
           else
             pw.Table.fromTextArray(
-              headers: const ['#', 'Client', 'Status', 'Address', 'Arrival'],
+              headers: const ['#', 'Cliente', 'Estado', 'Dirección', 'Llegada'],
               data: deliveryOrders
                   .map(
                     (order) => [
                       '${order.sequenceOrder}',
                       order.clientEmail,
-                      order.status,
+                      StatusLabels.deliveryStatus(order.status),
                       order.address ?? '—',
                       _format(order.arrivalAt),
                     ],
@@ -70,7 +71,7 @@ class TripPdfService {
             ),
           pw.SizedBox(height: 24),
           pw.Text(
-            'Generated on ${_format(generatedAt)}',
+            'Generado el ${_format(generatedAt)}',
             style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
           ),
         ],

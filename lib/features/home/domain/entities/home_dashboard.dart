@@ -110,6 +110,8 @@ class HomeTrip {
     this.driverId,
     this.deviceId,
     this.vehicleId,
+    this.originPointId,
+    this.trackingCode,
     this.originPointName,
     this.originPointAddress,
     this.createdAt,
@@ -122,6 +124,8 @@ class HomeTrip {
   final String? driverId;
   final String? deviceId;
   final String? vehicleId;
+  final String? originPointId;
+  final String? trackingCode;
   final String status;
   final String? originPointName;
   final String? originPointAddress;

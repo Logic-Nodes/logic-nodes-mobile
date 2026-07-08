@@ -18,9 +18,9 @@ enum AnalyticsPeriod {
 }
 
 enum AnalyticsAlertTypeFilter {
-  all('All'),
-  temperature('Temperature'),
-  movement('Movement');
+  all('Todas'),
+  temperature('Temperatura'),
+  movement('Movimiento');
 
   const AnalyticsAlertTypeFilter(this.label);
 
@@ -181,7 +181,7 @@ class AnalyticsController extends ChangeNotifier {
     } on AppException catch (exception) {
       _errorMessage = exception.message;
     } on Exception {
-      _errorMessage = 'Unable to load analytics from the current backend.';
+      _errorMessage = 'No se pudieron cargar las analíticas desde el backend.';
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -207,7 +207,7 @@ class AnalyticsController extends ChangeNotifier {
       _errorMessage = exception.message;
       _tripDetail = null;
     } on Exception {
-      _errorMessage = 'Unable to load trip analytics from the backend.';
+      _errorMessage = 'No se pudieron cargar las analíticas del viaje desde el backend.';
       _tripDetail = null;
     } finally {
       _isLoadingTrip = false;

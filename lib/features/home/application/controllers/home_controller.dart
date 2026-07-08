@@ -44,7 +44,7 @@ class HomeController extends ChangeNotifier {
       _errorMessage = exception.message;
     } on Exception {
       _errorMessage =
-          'Unable to load workspace data from the current backend.';
+          'No se pudieron cargar los datos del workspace desde el backend actual.';
     } finally {
       _isLoading = false;
       notifyListeners();

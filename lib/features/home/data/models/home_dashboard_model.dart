@@ -48,6 +48,8 @@ class HomeTripModel {
     this.driverId,
     this.deviceId,
     this.vehicleId,
+    this.originPointId,
+    this.trackingCode,
     this.originPointName,
     this.originPointAddress,
     this.createdAt,
@@ -68,6 +70,8 @@ class HomeTripModel {
       driverId: _nullableStringValue(map['driverId']),
       deviceId: _nullableStringValue(map['deviceId']),
       vehicleId: _nullableStringValue(map['vehicleId']),
+      originPointId: _nullableStringValue(map['originPointId']),
+      trackingCode: _nullableStringValue(map['trackingCode']),
       status: _stringValue(map['status']).toUpperCase(),
       originPointName: _nullableStringValue(originPoint['name']),
       originPointAddress: _nullableStringValue(originPoint['address']),
@@ -88,6 +92,8 @@ class HomeTripModel {
   final String? driverId;
   final String? deviceId;
   final String? vehicleId;
+  final String? originPointId;
+  final String? trackingCode;
   final String status;
   final String? originPointName;
   final String? originPointAddress;
@@ -103,6 +109,8 @@ class HomeTripModel {
       driverId: driverId,
       deviceId: deviceId,
       vehicleId: vehicleId,
+      originPointId: originPointId,
+      trackingCode: trackingCode,
       status: status,
       originPointName: originPointName,
       originPointAddress: originPointAddress,

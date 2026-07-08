@@ -30,7 +30,7 @@ class _TripAnalyticsDetailScreenState extends State<TripAnalyticsDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Trip analytics'),
+        title: const Text('Analíticas del viaje'),
       ),
       body: AnimatedBuilder(
         animation: widget.controller,
@@ -48,7 +48,7 @@ class _TripAnalyticsDetailScreenState extends State<TripAnalyticsDetailScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Text(
-                  controller.errorMessage ?? 'Trip not found.',
+                  controller.errorMessage ?? 'Viaje no encontrado.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: AppColors.inkMuted),
                 ),
@@ -65,7 +65,7 @@ class _TripAnalyticsDetailScreenState extends State<TripAnalyticsDetailScreen> {
             ),
             children: [
               Text(
-                'Cargo monitoring',
+                'Monitoreo de carga',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -83,28 +83,28 @@ class _TripAnalyticsDetailScreenState extends State<TripAnalyticsDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Trip information',
+                        'Información del viaje',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       _InfoGrid(
                         items: [
-                          _InfoItem(label: 'Driver', value: trip.driverName),
-                          _InfoItem(label: 'Cargo type', value: trip.cargoType),
+                          _InfoItem(label: 'Conductor', value: trip.driverName),
+                          _InfoItem(label: 'Tipo de carga', value: trip.cargoType),
                           _InfoItem(
-                            label: 'Trip start',
+                            label: 'Inicio del viaje',
                             value: _formatDate(trip.startDate),
                           ),
                           _InfoItem(
-                            label: 'Route',
+                            label: 'Ruta',
                             value: '${trip.origin} → ${trip.destination}',
                           ),
                           _InfoItem(
-                            label: 'Distance',
+                            label: 'Distancia',
                             value: '${trip.distance} km',
                           ),
                           _InfoItem(
-                            label: 'Trip end',
+                            label: 'Fin del viaje',
                             value: _formatDate(trip.endDate),
                           ),
                         ],
@@ -121,7 +121,7 @@ class _TripAnalyticsDetailScreenState extends State<TripAnalyticsDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Temperature vs time',
+                        'Temperatura vs tiempo',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -129,7 +129,7 @@ class _TripAnalyticsDetailScreenState extends State<TripAnalyticsDetailScreen> {
                         data: controller.temperatureSeries,
                         color: AppColors.primary,
                         unit: '°C',
-                        emptyMessage: 'No temperature data for this trip.',
+                        emptyMessage: 'No hay datos de temperatura para este viaje.',
                       ),
                     ],
                   ),
@@ -143,7 +143,7 @@ class _TripAnalyticsDetailScreenState extends State<TripAnalyticsDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Vibration vs time',
+                        'Vibración vs tiempo',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -151,7 +151,7 @@ class _TripAnalyticsDetailScreenState extends State<TripAnalyticsDetailScreen> {
                         data: controller.vibrationSeries,
                         color: AppColors.warning,
                         unit: '',
-                        emptyMessage: 'No vibration data for this trip.',
+                        emptyMessage: 'No hay datos de vibración para este viaje.',
                       ),
                     ],
                   ),
@@ -175,20 +175,20 @@ class _TripAnalyticsDetailScreenState extends State<TripAnalyticsDetailScreen> {
       return value;
     }
     const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+      'ene',
+      'feb',
+      'mar',
+      'abr',
+      'may',
+      'jun',
+      'jul',
+      'ago',
+      'sep',
+      'oct',
+      'nov',
+      'dic',
     ];
-    return '${months[parsed.month - 1]} ${parsed.day}, ${parsed.year}';
+    return '${parsed.day} ${months[parsed.month - 1]} ${parsed.year}';
   }
 }
 

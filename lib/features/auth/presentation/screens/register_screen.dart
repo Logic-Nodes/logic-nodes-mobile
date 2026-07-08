@@ -72,23 +72,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ? null
                 : () => Navigator.of(context).pop(),
             child: const Text(
-              'Back to log in',
+              'Volver al inicio de sesión',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          title: 'Create New Account',
+          title: 'Crear cuenta nueva',
           description:
-              'Follow the mobile flow from the report and choose the segment that defines your access level inside OmniTrack.',
+              'Sigue el flujo móvil del reporte y elige el segmento que define tu nivel de acceso dentro de OmniTrack.',
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Choose your segment',
+                  'Elige tu segmento',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: Colors.white,
                       ),
@@ -116,7 +116,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     activeColor: Colors.white,
                     checkColor: AppColors.primary,
                     title: const Text(
-                      'By accepting, you agree to the application Terms and conditions',
+                      'Al aceptar, aceptas los Términos y condiciones de la aplicación',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 12.5,
@@ -144,7 +144,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Sign Up'),
+                      : const Text('Registrarse'),
                 ),
               ],
             ),
@@ -158,11 +158,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(label: 'Company Data'),
+        _SectionTitle(label: 'Datos de la empresa'),
         const SizedBox(height: AppSpacing.sm),
         AuthTextField(
           controller: _companyContactEmailController,
-          label: 'Company contact email',
+          label: 'Correo de contacto de la empresa',
           hintText: 'operations@company.com',
           keyboardType: TextInputType.emailAddress,
           validator: _requiredEmail,
@@ -173,7 +173,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Expanded(
               child: AuthTextField(
                 controller: _legalNameController,
-                label: 'Legal name',
+                label: 'Razón social',
                 hintText: 'North Coast Logistics SAC',
                 validator: _requiredText,
               ),
@@ -192,19 +192,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(height: AppSpacing.sm),
         AuthTextField(
           controller: _fiscalAddressController,
-          label: 'Fiscal address',
+          label: 'Dirección fiscal',
           hintText: 'Av. Javier Prado 2450, Lima',
           validator: _requiredText,
         ),
         const SizedBox(height: AppSpacing.md),
-        _SectionTitle(label: 'Administrator Details'),
+        _SectionTitle(label: 'Datos del administrador'),
         const SizedBox(height: AppSpacing.sm),
         Row(
           children: [
             Expanded(
               child: AuthTextField(
                 controller: _adminFirstNameController,
-                label: 'First name',
+                label: 'Nombre',
                 hintText: 'Adrian',
                 validator: _requiredText,
               ),
@@ -213,7 +213,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Expanded(
               child: AuthTextField(
                 controller: _adminLastNameController,
-                label: 'Last name',
+                label: 'Apellido',
                 hintText: 'Valerio',
                 validator: _requiredText,
               ),
@@ -221,11 +221,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        _SectionTitle(label: 'Administrator Account'),
+        _SectionTitle(label: 'Cuenta del administrador'),
         const SizedBox(height: AppSpacing.sm),
         AuthTextField(
           controller: _adminEmailController,
-          label: 'Email address',
+          label: 'Correo electrónico',
           hintText: 'admin@company.com',
           keyboardType: TextInputType.emailAddress,
           validator: _requiredEmail,
@@ -233,15 +233,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(height: AppSpacing.sm),
         AuthTextField(
           controller: _companyPasswordController,
-          label: 'Password',
-          hintText: 'At least 8 characters',
+          label: 'Contraseña',
+          hintText: 'Al menos 8 caracteres',
           obscureText: true,
           validator: _requiredPassword,
         ),
         const SizedBox(height: AppSpacing.sm),
         AuthTextField(
           controller: _companyConfirmPasswordController,
-          label: 'Confirm password',
+          label: 'Confirmar contraseña',
           obscureText: true,
           validator: (value) => _confirmPassword(
             value,
@@ -256,14 +256,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(label: 'Profile Data'),
+        _SectionTitle(label: 'Datos del perfil'),
         const SizedBox(height: AppSpacing.sm),
         Row(
           children: [
             Expanded(
               child: AuthTextField(
                 controller: _firstNameController,
-                label: 'First name',
+                label: 'Nombre',
                 hintText: 'Ana',
                 validator: _requiredText,
               ),
@@ -272,7 +272,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Expanded(
               child: AuthTextField(
                 controller: _lastNameController,
-                label: 'Last name',
+                label: 'Apellido',
                 hintText: 'Torres',
                 validator: _requiredText,
               ),
@@ -280,11 +280,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        _SectionTitle(label: 'Account Data'),
+        _SectionTitle(label: 'Datos de la cuenta'),
         const SizedBox(height: AppSpacing.sm),
         AuthTextField(
           controller: _clientEmailController,
-          label: 'Email address',
+          label: 'Correo electrónico',
           hintText: 'client@company.com',
           keyboardType: TextInputType.emailAddress,
           validator: _requiredEmail,
@@ -292,15 +292,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(height: AppSpacing.sm),
         AuthTextField(
           controller: _clientPasswordController,
-          label: 'Password',
-          hintText: 'At least 8 characters',
+          label: 'Contraseña',
+          hintText: 'Al menos 8 caracteres',
           obscureText: true,
           validator: _requiredPassword,
         ),
         const SizedBox(height: AppSpacing.sm),
         AuthTextField(
           controller: _clientConfirmPasswordController,
-          label: 'Confirm password',
+          label: 'Confirmar contraseña',
           obscureText: true,
           validator: (value) => _confirmPassword(
             value,
@@ -320,7 +320,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('You must accept the Terms and conditions.'),
+          content: Text('Debes aceptar los Términos y condiciones.'),
         ),
       );
       return;
@@ -356,7 +356,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   String? _requiredText(String? value) {
     if ((value?.trim().isEmpty ?? true)) {
-      return 'Required field.';
+      return 'Campo obligatorio.';
     }
 
     return null;
@@ -365,11 +365,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _requiredEmail(String? value) {
     final email = value?.trim() ?? '';
     if (email.isEmpty) {
-      return 'Email is required.';
+      return 'El correo es obligatorio.';
     }
 
     if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-      return 'Enter a valid email.';
+      return 'Ingresa un correo válido.';
     }
 
     return null;
@@ -377,7 +377,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   String? _requiredPassword(String? value) {
     if ((value?.length ?? 0) < 8) {
-      return 'Use at least 8 characters.';
+      return 'Usa al menos 8 caracteres.';
     }
 
     return null;
@@ -388,7 +388,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required String against,
   }) {
     if (value != against) {
-      return 'Passwords do not match.';
+      return 'Las contraseñas no coinciden.';
     }
 
     return null;
@@ -410,7 +410,7 @@ class _SegmentPicker extends StatelessWidget {
       children: [
         Expanded(
           child: _SegmentOption(
-            label: 'Shipping Company',
+            label: 'Empresa de transporte',
             value: RegistrationSegment.shippingCompany,
             selected: selected,
             onChanged: onChanged,
@@ -419,7 +419,7 @@ class _SegmentPicker extends StatelessWidget {
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: _SegmentOption(
-            label: 'Client',
+            label: 'Cliente',
             value: RegistrationSegment.client,
             selected: selected,
             onChanged: onChanged,

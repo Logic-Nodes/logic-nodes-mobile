@@ -5,6 +5,7 @@ import '../../../../core/network/api_environment.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/utils/design_tokens.dart';
 import '../../../../core/utils/omnitrack_logo.dart';
+import '../../../../core/utils/status_labels.dart';
 import '../../../auth/application/controllers/session_controller.dart';
 import '../../../auth/domain/entities/auth_session.dart';
 import '../../../auth/domain/entities/auth_user.dart';
@@ -59,12 +60,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String? _moduleRoute(String label) {
     return switch (label) {
-      'Dashboard' => AppRoutes.analytics,
-      'Fleet' => AppRoutes.fleetVehicles,
-      'Trips' => AppRoutes.trips,
-      'Alerts' => AppRoutes.alerts,
-      'Monitoring' => AppRoutes.analytics,
-      'Billing' => AppRoutes.subscription,
+      'Panel' => AppRoutes.analytics,
+      'Flota' => AppRoutes.fleetVehicles,
+      'Viajes' => AppRoutes.trips,
+      'Alertas' => AppRoutes.alerts,
+      'Monitoreo' => AppRoutes.analytics,
+      'Facturación' => AppRoutes.subscription,
       _ => null,
     };
   }
@@ -113,12 +114,12 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Refresh',
+            tooltip: 'Actualizar',
             onPressed: widget.controller.isLoading ? null : widget.controller.load,
             icon: const Icon(Icons.refresh_rounded),
           ),
           IconButton(
-            tooltip: 'Sign out',
+            tooltip: 'Cerrar sesión',
             onPressed: _signOut,
             icon: const Icon(Icons.logout_rounded),
           ),
@@ -155,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 return _ErrorState(
                   message: widget.controller.errorMessage ??
-                      'No workspace data is available yet for the current account.',
+                      'No hay datos del workspace disponibles para esta cuenta.',
                   onRetry: widget.controller.load,
                 );
               }
@@ -268,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: AppSpacing.lg),
           _SectionHeading(
-            title: 'Operational Snapshot',
+            title: 'Resumen operativo',
             description: user.role == UserRole.fleetManager
                 ? 'Indicadores construidos con viajes, dispositivos y alertas visibles.'
                 : 'Resumen construido con viajes, ordenes y alertas asociadas a tu cuenta.',
@@ -280,11 +281,11 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () =>
                 Navigator.of(context).pushNamed(AppRoutes.analytics),
             icon: const Icon(Icons.analytics_outlined),
-            label: const Text('Open analytics dashboard'),
+            label: const Text('Abrir panel de analíticas'),
           ),
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
-            title: 'Focus Today',
+            title: 'Foco de hoy',
             description: 'Puntos de atencion calculados desde el estado actual del backend.',
           ),
           const SizedBox(height: AppSpacing.md),
@@ -294,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
-            title: 'Workspace Access',
+            title: 'Acceso al workspace',
             description: 'Accesos visibles segun el rol autenticado.',
           ),
           const SizedBox(height: AppSpacing.md),
@@ -335,8 +336,8 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _InfoBanner(
             title: user.role == UserRole.fleetManager
-                ? 'Live Operations'
-                : 'Shipment Progress',
+                ? 'Operaciones en vivo'
+                : 'Progreso del envío',
             description: user.role == UserRole.fleetManager
                 ? 'Seguimiento real de rutas, dispositivos y sesiones activas.'
                 : 'Seguimiento real de los viajes y ordenes vinculadas a tu cuenta.',
@@ -377,8 +378,8 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: AppSpacing.lg),
           _SectionHeading(
             title: user.role == UserRole.fleetManager
-                ? 'Routes In Motion'
-                : 'Visible Shipments',
+                ? 'Rutas en movimiento'
+                : 'Envíos visibles',
             description: 'Tarjetas alimentadas con los viajes retornados por la API.',
           ),
           const SizedBox(height: AppSpacing.md),
@@ -386,7 +387,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () =>
                 Navigator.of(context).pushNamed(AppRoutes.analytics),
             icon: const Icon(Icons.analytics_outlined),
-            label: const Text('Open analytics dashboard'),
+            label: const Text('Abrir panel de analíticas'),
           ),
           const SizedBox(height: AppSpacing.sm),
           for (final card in cards) ...[
@@ -403,7 +404,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
-            title: 'Readiness Board',
+            title: 'Panel de preparación',
             description: 'Estadisticas operativas derivadas del backend visible.',
           ),
           const SizedBox(height: AppSpacing.md),
@@ -416,7 +417,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
-            title: 'Recent Activity',
+            title: 'Actividad reciente',
             description: 'Eventos recientes deducidos de viajes y alertas.',
           ),
           const SizedBox(height: AppSpacing.md),
@@ -451,7 +452,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _InfoBanner(
-            title: 'Response Center',
+            title: 'Centro de respuesta',
             description: 'Alertas agrupadas con base en la respuesta real del backend.',
             accent: AppColors.warning,
             icon: Icons.warning_amber_rounded,
@@ -461,11 +462,11 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () =>
                 Navigator.of(context).pushNamed(AppRoutes.alerts),
             icon: const Icon(Icons.open_in_new_rounded),
-            label: const Text('Open alerts center'),
+            label: const Text('Abrir centro de alertas'),
           ),
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
-            title: 'Alert Pipeline',
+            title: 'Canal de alertas',
             description: 'Lectura operativa de criticidad, seguimiento y cierre.',
           ),
           const SizedBox(height: AppSpacing.md),
@@ -483,7 +484,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
-            title: 'Immediate Actions',
+            title: 'Acciones inmediatas',
             description: 'Acciones sugeridas segun las entidades que hoy devuelve el backend.',
           ),
           const SizedBox(height: AppSpacing.md),
@@ -536,18 +537,18 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _WorkspaceHero(
-                title: 'Billing & Plan',
+                title: 'Facturación y plan',
                 description:
                     'Suscripcion y pagos cargados desde /api/v1/subscription y /api/v1/payments.',
                 roleLabel: user.role.label,
-                companyLabel: user.companyName ?? 'Personal workspace',
+                companyLabel: user.companyName ?? 'Workspace personal',
               ),
               const SizedBox(height: AppSpacing.md),
               FilledButton.icon(
                 onPressed: () =>
                     Navigator.of(context).pushNamed(AppRoutes.subscription),
                 icon: const Icon(Icons.receipt_long_rounded),
-                label: const Text('Manage subscription & payments'),
+                label: const Text('Gestionar suscripción y pagos'),
               ),
               const SizedBox(height: AppSpacing.lg),
               if (billing.isLoading && subscription == null)
@@ -573,19 +574,19 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Expanded(
                               child: _KeyValueItem(
-                                label: 'Status',
+                                label: 'Estado',
                                 value: subscription.status,
                               ),
                             ),
                             Expanded(
                               child: _KeyValueItem(
-                                label: 'Renewal',
+                                label: 'Renovación',
                                 value: subscription.renewal,
                               ),
                             ),
                             Expanded(
                               child: _KeyValueItem(
-                                label: 'Payments',
+                                label: 'Pagos',
                                 value: '${billing.payments.length}',
                               ),
                             ),
@@ -601,14 +602,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Text(
                       billing.errorMessage ??
-                          'No subscription data returned by the backend yet.',
+                          'El backend aún no devolvió datos de suscripción.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),
                 ),
               const SizedBox(height: AppSpacing.lg),
               const _SectionHeading(
-                title: 'Usage Snapshot',
+                title: 'Resumen de uso',
                 description: 'Consumo operativo visible desde trips, devices y alertas.',
               ),
               const SizedBox(height: AppSpacing.md),
@@ -687,7 +688,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
-            title: 'Session Details',
+            title: 'Detalles de sesión',
             description: 'Datos visibles de la conexion actual y del ultimo sync.',
           ),
           const SizedBox(height: AppSpacing.md),
@@ -702,22 +703,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const Divider(height: AppSpacing.lg),
                   _DetailRow(
-                    label: 'Docs',
+                    label: 'Documentación',
                     value: ApiEnvironment.docsUrl,
                   ),
                   const Divider(height: AppSpacing.lg),
                   _DetailRow(
-                    label: 'Token expires',
+                    label: 'Token expira',
                     value: _formatDateTime(session.expiresAt),
                   ),
                   const Divider(height: AppSpacing.lg),
                   _DetailRow(
                     label: 'Workspace',
-                    value: user.companyName ?? 'Personal account',
+                    value: user.companyName ?? 'Cuenta personal',
                   ),
                   const Divider(height: AppSpacing.lg),
                   _DetailRow(
-                    label: 'Last sync',
+                    label: 'Última sincronización',
                     value: _formatDateTime(dashboard.loadedAt),
                   ),
                 ],
@@ -726,7 +727,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
-            title: 'Enabled Modules',
+            title: 'Módulos habilitados',
             description: 'Secciones disponibles actualmente para este perfil.',
           ),
           const SizedBox(height: AppSpacing.md),
@@ -761,7 +762,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
           const SizedBox(height: AppSpacing.lg),
           const _SectionHeading(
-            title: 'Quick Access',
+            title: 'Acceso rápido',
             description: 'Pantallas del flujo mobile alineadas al reporte.',
           ),
           const SizedBox(height: AppSpacing.md),
@@ -776,7 +777,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () =>
                 Navigator.of(context).pushNamed(AppRoutes.analytics),
             icon: const Icon(Icons.analytics_outlined),
-            label: const Text('Open analytics dashboard'),
+            label: const Text('Abrir panel de analíticas'),
           ),
           const SizedBox(height: AppSpacing.sm),
           OutlinedButton.icon(
@@ -799,20 +800,20 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () =>
                 Navigator.of(context).pushNamed(AppRoutes.alerts),
             icon: const Icon(Icons.notifications_active_outlined),
-            label: const Text('Open alerts center'),
+            label: const Text('Abrir centro de alertas'),
           ),
           const SizedBox(height: AppSpacing.sm),
           OutlinedButton.icon(
             onPressed: () =>
                 Navigator.of(context).pushNamed(AppRoutes.subscription),
             icon: const Icon(Icons.receipt_long_outlined),
-            label: const Text('Manage subscription & payments'),
+            label: const Text('Gestionar suscripción y pagos'),
           ),
           const SizedBox(height: AppSpacing.lg),
           FilledButton.icon(
             onPressed: _signOut,
             icon: const Icon(Icons.logout_rounded),
-            label: const Text('Sign Out'),
+            label: const Text('Cerrar sesión'),
           ),
         ],
       ),
@@ -825,29 +826,29 @@ class _HomeScreenState extends State<HomeScreen> {
         return const [
           _HomeDestination(
             tab: _HomeTab.overview,
-            label: 'Overview',
-            subtitle: 'Operations command',
+            label: 'Resumen',
+            subtitle: 'Centro de operaciones',
             icon: Icons.space_dashboard_outlined,
             selectedIcon: Icons.space_dashboard_rounded,
           ),
           _HomeDestination(
             tab: _HomeTab.operations,
-            label: 'Fleet',
-            subtitle: 'Fleet and trip tracking',
+            label: 'Flota',
+            subtitle: 'Flota y seguimiento de viajes',
             icon: Icons.local_shipping_outlined,
             selectedIcon: Icons.local_shipping_rounded,
           ),
           _HomeDestination(
             tab: _HomeTab.alerts,
-            label: 'Alerts',
-            subtitle: 'Incidents and response',
+            label: 'Alertas',
+            subtitle: 'Incidentes y respuesta',
             icon: Icons.notifications_active_outlined,
             selectedIcon: Icons.notifications_active_rounded,
           ),
           _HomeDestination(
             tab: _HomeTab.account,
-            label: 'Account',
-            subtitle: 'Profile and access',
+            label: 'Cuenta',
+            subtitle: 'Perfil y accesos',
             icon: Icons.person_outline_rounded,
             selectedIcon: Icons.person_rounded,
           ),
@@ -856,29 +857,29 @@ class _HomeScreenState extends State<HomeScreen> {
         return const [
           _HomeDestination(
             tab: _HomeTab.overview,
-            label: 'Overview',
-            subtitle: 'Shipment visibility',
+            label: 'Resumen',
+            subtitle: 'Visibilidad de envíos',
             icon: Icons.space_dashboard_outlined,
             selectedIcon: Icons.space_dashboard_rounded,
           ),
           _HomeDestination(
             tab: _HomeTab.operations,
-            label: 'Trips',
-            subtitle: 'Routes and milestones',
+            label: 'Viajes',
+            subtitle: 'Rutas e hitos',
             icon: Icons.route_outlined,
             selectedIcon: Icons.route_rounded,
           ),
           _HomeDestination(
             tab: _HomeTab.billing,
-            label: 'Billing',
-            subtitle: 'Module status',
+            label: 'Facturación',
+            subtitle: 'Estado del módulo',
             icon: Icons.receipt_long_outlined,
             selectedIcon: Icons.receipt_long_rounded,
           ),
           _HomeDestination(
             tab: _HomeTab.account,
-            label: 'Account',
-            subtitle: 'Profile and support',
+            label: 'Cuenta',
+            subtitle: 'Perfil y soporte',
             icon: Icons.person_outline_rounded,
             selectedIcon: Icons.person_rounded,
           ),
@@ -891,32 +892,32 @@ class _HomeScreenState extends State<HomeScreen> {
       case UserRole.fleetManager:
         return const [
           _HomeModule(
-            label: 'Dashboard',
+            label: 'Panel',
             description: 'Vista ejecutiva con metricas en tiempo real.',
             icon: Icons.dashboard_outlined,
           ),
           _HomeModule(
-            label: 'Fleet',
+            label: 'Flota',
             description: 'Vehiculos, dispositivos y disponibilidad.',
             icon: Icons.local_shipping_outlined,
           ),
           _HomeModule(
-            label: 'Trips',
+            label: 'Viajes',
             description: 'Rutas planificadas, activas y completadas.',
             icon: Icons.alt_route_rounded,
           ),
           _HomeModule(
-            label: 'Alerts',
+            label: 'Alertas',
             description: 'Incidentes, severidad y tiempo de respuesta.',
             icon: Icons.warning_amber_rounded,
           ),
           _HomeModule(
-            label: 'Monitoring',
+            label: 'Monitoreo',
             description: 'Sesiones de telemetria y trazabilidad.',
             icon: Icons.radar_outlined,
           ),
           _HomeModule(
-            label: 'Billing',
+            label: 'Facturación',
             description: 'Estado del modulo de billing.',
             icon: Icons.receipt_long_outlined,
           ),
@@ -924,22 +925,22 @@ class _HomeScreenState extends State<HomeScreen> {
       case UserRole.customer:
         return const [
           _HomeModule(
-            label: 'Trips',
+            label: 'Viajes',
             description: 'Seguimiento de pedidos y entregas activas.',
             icon: Icons.route_rounded,
           ),
           _HomeModule(
-            label: 'Alerts',
+            label: 'Alertas',
             description: 'Alertas asociadas al envio monitoreado.',
             icon: Icons.notifications_active_outlined,
           ),
           _HomeModule(
-            label: 'Billing',
+            label: 'Facturación',
             description: 'Estado del modulo de facturacion.',
             icon: Icons.receipt_long_outlined,
           ),
           _HomeModule(
-            label: 'Profile',
+            label: 'Perfil',
             description: 'Datos de contacto y preferencias.',
             icon: Icons.person_outline_rounded,
           ),
@@ -952,28 +953,28 @@ class _HomeScreenState extends State<HomeScreen> {
       case UserRole.fleetManager:
         return [
           _MetricCardData(
-            label: 'Visible Vehicles',
+            label: 'Vehículos visibles',
             value: '${dashboard.totalVehicles}',
             description: 'Vehiculos obtenidos desde el backend actual.',
             icon: Icons.local_shipping_outlined,
             accent: AppColors.primary,
           ),
           _MetricCardData(
-            label: 'Active Trips',
+            label: 'Viajes activos',
             value: '${dashboard.activeTrips}',
             description: 'Rutas en progreso dentro del alcance visible.',
             icon: Icons.route_outlined,
             accent: AppColors.secondary,
           ),
           _MetricCardData(
-            label: 'Open Alerts',
+            label: 'Alertas abiertas',
             value: '${dashboard.openAlerts + dashboard.acknowledgedAlerts}',
             description: 'Alertas abiertas o reconocidas pendientes.',
             icon: Icons.warning_amber_rounded,
             accent: AppColors.warning,
           ),
           _MetricCardData(
-            label: 'Live Sessions',
+            label: 'Sesiones en vivo',
             value: '${dashboard.activeSessions.length}',
             description: 'Sesiones activas de monitoreo detectadas.',
             icon: Icons.radar_outlined,
@@ -983,28 +984,28 @@ class _HomeScreenState extends State<HomeScreen> {
       case UserRole.customer:
         return [
           _MetricCardData(
-            label: 'Tracked Trips',
+            label: 'Viajes rastreados',
             value: '${dashboard.totalTrips}',
             description: 'Envios vinculados a tu correo.',
             icon: Icons.route_outlined,
             accent: AppColors.primary,
           ),
           _MetricCardData(
-            label: 'Delivery Orders',
+            label: 'Órdenes de entrega',
             value: '${dashboard.totalDeliveryOrders}',
             description: 'Ordenes visibles para tu cuenta.',
             icon: Icons.inventory_2_outlined,
             accent: AppColors.secondary,
           ),
           _MetricCardData(
-            label: 'Open Alerts',
+            label: 'Alertas abiertas',
             value: '${dashboard.openAlerts + dashboard.acknowledgedAlerts}',
             description: 'Alertas activas en tus envios.',
             icon: Icons.notification_important_outlined,
             accent: AppColors.warning,
           ),
           _MetricCardData(
-            label: 'Live Sessions',
+            label: 'Sesiones en vivo',
             value: '${dashboard.activeSessions.length}',
             description: 'Sesiones activas asociadas a tus viajes.',
             icon: Icons.sensors_outlined,
@@ -1022,7 +1023,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case UserRole.fleetManager:
         return [
           _FocusCardData(
-            title: '${dashboard.activeTrips} active trips need review',
+            title: '${dashboard.activeTrips} viajes activos requieren revisión',
             description:
                 'El backend reporta ${dashboard.activeSessions.length} sesiones activas y ${dashboard.plannedTrips} rutas aun planificadas.',
             icon: Icons.schedule_rounded,
@@ -1030,14 +1031,14 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           _FocusCardData(
             title:
-                '${dashboard.openAlerts + dashboard.acknowledgedAlerts} alerts remain in queue',
+                '${dashboard.openAlerts + dashboard.acknowledgedAlerts} alertas pendientes en cola',
             description:
                 'Las alertas visibles incluyen ${dashboard.openAlerts} abiertas y ${dashboard.acknowledgedAlerts} reconocidas.',
             icon: Icons.warning_amber_rounded,
             accent: AppColors.warning,
           ),
           _FocusCardData(
-            title: '${dashboard.onlineDevices} devices are online right now',
+            title: '${dashboard.onlineDevices} dispositivos en línea ahora',
             description:
                 'El inventario visible tiene ${dashboard.totalVehicles} vehiculos y ${dashboard.offlineDevices} dispositivos sin conexion.',
             icon: Icons.sensors_outlined,
@@ -1047,15 +1048,15 @@ class _HomeScreenState extends State<HomeScreen> {
       case UserRole.customer:
         return [
           _FocusCardData(
-            title: '${dashboard.totalTrips} tracked trips matched your email',
+            title: '${dashboard.totalTrips} viajes rastreados coinciden con tu correo',
             description:
-                'La app encontro ${dashboard.totalDeliveryOrders} delivery orders relacionados con tu cuenta.',
+                'La app encontro ${dashboard.totalDeliveryOrders} ordenes de entrega relacionadas con tu cuenta.',
             icon: Icons.location_searching_rounded,
             accent: AppColors.primary,
           ),
           _FocusCardData(
             title:
-                '${dashboard.deliveredOrders}/${dashboard.totalDeliveryOrders} milestones completed',
+                '${dashboard.deliveredOrders}/${dashboard.totalDeliveryOrders} hitos completados',
             description:
                 'Puedes ver ${dashboard.pendingOrders} pedidos pendientes y ${dashboard.failedOrders} fallidos.',
             icon: Icons.check_circle_outline_rounded,
@@ -1063,7 +1064,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           _FocusCardData(
             title:
-                '${dashboard.openAlerts + dashboard.acknowledgedAlerts} alerts need follow-up',
+                '${dashboard.openAlerts + dashboard.acknowledgedAlerts} alertas requieren seguimiento',
             description:
                 'Las alertas se muestran filtradas segun las ordenes de entrega vinculadas a tu cuenta.',
             icon: Icons.notifications_active_outlined,
@@ -1087,13 +1088,13 @@ class _HomeScreenState extends State<HomeScreen> {
       return [
         _ProgressCardData(
           title: role == UserRole.fleetManager
-              ? 'No trips available yet'
-              : 'No tracked shipments yet',
+              ? 'Aún no hay viajes disponibles'
+              : 'Aún no hay envíos rastreados',
           subtitle:
-              'When the backend has trips for this workspace they will appear here automatically.',
+              'Cuando el backend tenga viajes para este workspace aparecerán aquí automáticamente.',
           progress: 0,
-          trailingLabel: 'Waiting',
-          tag: 'Backend ready',
+          trailingLabel: 'En espera',
+          tag: 'Backend listo',
           accent: AppColors.secondary,
         ),
       ];
@@ -1107,16 +1108,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
       return _ProgressCardData(
         title: role == UserRole.fleetManager
-            ? 'Trip #${trip.id}${trip.originPointName != null ? ' / ${trip.originPointName}' : ''}'
-            : 'Order #${order?.id ?? trip.id}',
+            ? 'Viaje #${trip.id}${trip.originPointName != null ? ' / ${trip.originPointName}' : ''}'
+            : 'Pedido #${order?.id ?? trip.id}',
         subtitle: role == UserRole.fleetManager
-            ? '$vehicleLabel | ${_statusLabel(trip.status)}'
-            : '${trip.deliveryOrders.length} orders | $vehicleLabel',
+            ? '$vehicleLabel | ${StatusLabels.tripStatus(trip.status)}'
+            : '${trip.deliveryOrders.length} ordenes | $vehicleLabel',
         progress: trip.completionProgress,
-        trailingLabel: _statusLabel(trip.status),
+        trailingLabel: StatusLabels.tripStatus(trip.status),
         tag: trip.deliveryOrders.isEmpty
-            ? 'No delivery orders'
-            : '${trip.deliveredOrders}/${trip.deliveryOrders.length} delivered',
+            ? 'Sin órdenes de entrega'
+            : '${trip.deliveredOrders}/${trip.deliveryOrders.length} entregadas',
         accent: _statusAccent(trip.status),
         tripId: trip.id,
       );
@@ -1131,19 +1132,19 @@ class _HomeScreenState extends State<HomeScreen> {
       case UserRole.fleetManager:
         return [
           _MiniStatData(
-            label: 'Vehicles',
+            label: 'Vehículos',
             value: '${dashboard.totalVehicles}',
             icon: Icons.inventory_2_outlined,
             accent: AppColors.primary,
           ),
           _MiniStatData(
-            label: 'Online Devices',
+            label: 'Dispositivos en línea',
             value: '${dashboard.onlineDevices}',
             icon: Icons.sensors_outlined,
             accent: AppColors.secondary,
           ),
           _MiniStatData(
-            label: 'Active Sessions',
+            label: 'Sesiones activas',
             value: '${dashboard.activeSessions.length}',
             icon: Icons.radar_outlined,
             accent: AppColors.success,
@@ -1152,19 +1153,19 @@ class _HomeScreenState extends State<HomeScreen> {
       case UserRole.customer:
         return [
           _MiniStatData(
-            label: 'Orders',
+            label: 'Pedidos',
             value: '${dashboard.totalDeliveryOrders}',
             icon: Icons.flag_outlined,
             accent: AppColors.primary,
           ),
           _MiniStatData(
-            label: 'Delivered',
+            label: 'Entregados',
             value: '${dashboard.deliveredOrders}',
             icon: Icons.task_alt_rounded,
             accent: AppColors.secondary,
           ),
           _MiniStatData(
-            label: 'Live Sessions',
+            label: 'Sesiones en vivo',
             value: '${dashboard.activeSessions.length}',
             icon: Icons.timer_outlined,
             accent: AppColors.success,
@@ -1193,11 +1194,11 @@ class _HomeScreenState extends State<HomeScreen> {
         _TimelineEvent(
           time: _formatHourMinute(time),
           title: role == UserRole.fleetManager
-              ? 'Trip #${trip.id} is ${_statusLabel(trip.status).toLowerCase()}'
-              : 'Tracked trip #${trip.id} changed to ${_statusLabel(trip.status).toLowerCase()}',
+              ? 'Viaje #${trip.id} está ${StatusLabels.tripStatus(trip.status).toLowerCase()}'
+              : 'Viaje rastreado #${trip.id} cambió a ${StatusLabels.tripStatus(trip.status).toLowerCase()}',
           description: trip.deliveryOrders.isEmpty
-              ? 'No delivery orders were returned for this trip.'
-              : '${trip.deliveredOrders}/${trip.deliveryOrders.length} delivery orders are marked as delivered.',
+              ? 'No se devolvieron órdenes de entrega para este viaje.'
+              : '${trip.deliveredOrders}/${trip.deliveryOrders.length} órdenes de entrega están marcadas como entregadas.',
           accent: _statusAccent(trip.status),
         ),
       );
@@ -1209,10 +1210,10 @@ class _HomeScreenState extends State<HomeScreen> {
         _TimelineEvent(
           time: _formatHourMinute(time),
           title:
-              '${_titleCase(alert.type)} alert is ${_statusLabel(alert.status).toLowerCase()}',
+              'Alerta de ${StatusLabels.alertType(alert.type)} está ${StatusLabels.alertStatus(alert.status).toLowerCase()}',
           description: alert.deliveryOrderId == null
-              ? 'The alert is visible without a linked delivery order id.'
-              : 'Linked delivery order: #${alert.deliveryOrderId}.',
+              ? 'La alerta es visible sin una orden de entrega vinculada.'
+              : 'Orden de entrega vinculada: #${alert.deliveryOrderId}.',
           accent: _statusAccent(alert.status),
         ),
       );
@@ -1222,9 +1223,9 @@ class _HomeScreenState extends State<HomeScreen> {
       return const [
         _TimelineEvent(
           time: '--:--',
-          title: 'No recent activity',
+          title: 'Sin actividad reciente',
           description:
-              'Trips and alerts from the backend will appear here as soon as data exists.',
+              'Los viajes y alertas del backend aparecerán aquí cuando existan datos.',
           accent: AppColors.secondary,
         ),
       ];
@@ -1236,19 +1237,19 @@ class _HomeScreenState extends State<HomeScreen> {
   List<_MiniStatData> _alertSummaryFor(HomeDashboard dashboard) {
     return [
       _MiniStatData(
-        label: 'Open',
+        label: 'Abiertas',
         value: '${dashboard.openAlerts}',
         icon: Icons.priority_high_rounded,
         accent: AppColors.danger,
       ),
       _MiniStatData(
-        label: 'Acknowledged',
+        label: 'Reconocidas',
         value: '${dashboard.acknowledgedAlerts}',
         icon: Icons.rule_folder_outlined,
         accent: AppColors.warning,
       ),
       _MiniStatData(
-        label: 'Closed',
+        label: 'Cerradas',
         value: '${dashboard.closedAlerts}',
         icon: Icons.task_alt_rounded,
         accent: AppColors.success,
@@ -1266,11 +1267,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (alerts.isEmpty) {
       return const [
         _AlertCardData(
-          severity: 'Clear',
-          title: 'No alerts available',
+          severity: 'Sin alertas',
+          title: 'No hay alertas disponibles',
           description:
-              'The current backend did not return alerts for the visible workspace.',
-          timestamp: 'Backend synced',
+              'El backend actual no devolvió alertas para el workspace visible.',
+          timestamp: 'Backend sincronizado',
           accent: AppColors.success,
         ),
       ];
@@ -1278,11 +1279,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return alerts.take(4).map((alert) {
       return _AlertCardData(
-        severity: _statusLabel(alert.status),
-        title: '${_titleCase(alert.type)} alert'
-            '${alert.deliveryOrderId != null ? ' on order #${alert.deliveryOrderId}' : ''}',
+        severity: StatusLabels.alertStatus(alert.status),
+        title: 'Alerta de ${StatusLabels.alertType(alert.type)}'
+            '${alert.deliveryOrderId != null ? ' en pedido #${alert.deliveryOrderId}' : ''}',
         description:
-            'Current backend status: ${_statusLabel(alert.status).toLowerCase()}.',
+            'Estado actual del backend: ${StatusLabels.alertStatus(alert.status).toLowerCase()}.',
         timestamp: _relativeTimestamp(
           alert.lastActivityAt,
           fallback: dashboard.loadedAt,
@@ -1295,19 +1296,19 @@ class _HomeScreenState extends State<HomeScreen> {
   List<_MiniStatData> _billingUsageStats(HomeDashboard dashboard) {
     return [
       _MiniStatData(
-        label: 'Active trips',
+        label: 'Viajes activos',
         value: '${dashboard.activeTrips}',
         icon: Icons.route_outlined,
         accent: AppColors.primary,
       ),
       _MiniStatData(
-        label: 'Visible alerts',
+        label: 'Alertas visibles',
         value: '${dashboard.totalAlerts}',
         icon: Icons.notifications_outlined,
         accent: AppColors.secondary,
       ),
       _MiniStatData(
-        label: 'Live sessions',
+        label: 'Sesiones en vivo',
         value: '${dashboard.activeSessions.length}',
         icon: Icons.health_and_safety_outlined,
         accent: AppColors.success,
@@ -1317,16 +1318,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _vehicleLabel(HomeDashboard dashboard, String? vehicleId) {
     if (vehicleId == null) {
-      return 'No vehicle assigned';
+      return 'Sin vehículo asignado';
     }
 
     for (final vehicle in dashboard.vehicles) {
       if (vehicle.id == vehicleId) {
-        return 'Vehicle ${vehicle.plate}';
+        return 'Vehículo ${vehicle.plate}';
       }
     }
 
-    return 'Vehicle #$vehicleId';
+    return 'Vehículo #$vehicleId';
   }
 
   Color _statusAccent(String status) {
@@ -1349,42 +1350,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  String _statusLabel(String status) {
-    switch (status.toUpperCase()) {
-      case 'IN_PROGRESS':
-        return 'In Progress';
-      case 'PLANNED':
-        return 'Planned';
-      case 'COMPLETED':
-        return 'Completed';
-      case 'CANCELLED':
-        return 'Cancelled';
-      case 'OPEN':
-        return 'Open';
-      case 'ACKNOWLEDGED':
-        return 'Acknowledged';
-      case 'CLOSED':
-        return 'Closed';
-      case 'DELIVERED':
-        return 'Delivered';
-      case 'FAILED':
-        return 'Failed';
-      case 'ACTIVE':
-        return 'Active';
-      default:
-        return _titleCase(status);
-    }
-  }
-
-  String _titleCase(String value) {
-    return value
-        .toLowerCase()
-        .split('_')
-        .where((part) => part.isNotEmpty)
-        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
-        .join(' ');
-  }
-
   String _formatHourMinute(DateTime dateTime) {
     final local = dateTime.toLocal();
     final hours = local.hour.toString().padLeft(2, '0');
@@ -1396,15 +1361,15 @@ class _HomeScreenState extends State<HomeScreen> {
     final timestamp = (value ?? fallback).toLocal();
     final difference = DateTime.now().difference(timestamp);
     if (difference.inMinutes < 1) {
-      return 'Updated just now';
+      return 'Actualizado hace un momento';
     }
     if (difference.inMinutes < 60) {
-      return 'Updated ${difference.inMinutes} min ago';
+      return 'Actualizado hace ${difference.inMinutes} min';
     }
     if (difference.inHours < 24) {
-      return 'Updated ${difference.inHours} h ago';
+      return 'Actualizado hace ${difference.inHours} h';
     }
-    return 'Updated ${difference.inDays} d ago';
+    return 'Actualizado hace ${difference.inDays} d';
   }
 
   String _formatDateTime(DateTime dateTime) {
@@ -1416,18 +1381,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _monthLabel(int month) {
     const months = [
-      'Jan',
+      'Ene',
       'Feb',
       'Mar',
-      'Apr',
+      'Abr',
       'May',
       'Jun',
       'Jul',
-      'Aug',
+      'Ago',
       'Sep',
       'Oct',
       'Nov',
-      'Dec',
+      'Dic',
     ];
     return months[month - 1];
   }

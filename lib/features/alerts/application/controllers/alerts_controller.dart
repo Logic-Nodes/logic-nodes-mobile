@@ -16,13 +16,13 @@ enum AlertStatusFilter {
   String get label {
     switch (this) {
       case AlertStatusFilter.all:
-        return 'All';
+        return 'Todas';
       case AlertStatusFilter.open:
-        return 'Open';
+        return 'Abiertas';
       case AlertStatusFilter.acknowledged:
-        return 'Acknowledged';
+        return 'Reconocidas';
       case AlertStatusFilter.resolved:
-        return 'Resolved';
+        return 'Resueltas';
     }
   }
 
@@ -147,7 +147,7 @@ class AlertsController extends ChangeNotifier {
     } on AppException catch (exception) {
       _errorMessage = exception.message;
     } on Exception {
-      _errorMessage = 'Unable to load alerts from the current backend.';
+      _errorMessage = 'No se pudieron cargar las alertas desde el backend.';
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -187,7 +187,7 @@ class AlertsController extends ChangeNotifier {
     } on AppException catch (exception) {
       _errorMessage = exception.message;
     } on Exception {
-      _errorMessage = 'Unable to load alert details from the backend.';
+      _errorMessage = 'No se pudieron cargar los detalles de la alerta desde el backend.';
     } finally {
       _isLoadingDetail = false;
       notifyListeners();

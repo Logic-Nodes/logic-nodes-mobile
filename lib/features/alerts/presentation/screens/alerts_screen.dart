@@ -50,7 +50,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
             ),
             const SizedBox(height: AppSpacing.xxs),
             Text(
-              'Alerts',
+              'Alertas',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.inkMuted,
                     fontWeight: FontWeight.w600,
@@ -60,7 +60,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Refresh',
+            tooltip: 'Actualizar',
             onPressed: widget.controller.load,
             icon: const Icon(Icons.refresh_rounded),
           ),
@@ -85,13 +85,14 @@ class _AlertsScreenState extends State<AlertsScreen> {
                 Row(
                   children: [
                     _CountChip(
-                      label: '${controller.openCount} ALERT'
-                          '${controller.openCount == 1 ? '' : 'S'}',
+                      label: controller.openCount == 1
+                          ? '${controller.openCount} ALERTA'
+                          : '${controller.openCount} ALERTAS',
                       accent: AppColors.danger,
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     _CountChip(
-                      label: '${controller.resolvedCount} resolved',
+                      label: '${controller.resolvedCount} resueltas',
                       accent: AppColors.success,
                     ),
                   ],
@@ -112,7 +113,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                   controller: _searchController,
                   onChanged: controller.search,
                   decoration: const InputDecoration(
-                    hintText: 'Search alerts',
+                    hintText: 'Buscar alertas',
                     prefixIcon: Icon(Icons.search_rounded),
                   ),
                 ),
@@ -130,7 +131,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                 else if (alerts.isEmpty)
                   const _AlertsMessage(
                     icon: Icons.inbox_outlined,
-                    message: 'No alerts match the current filters.',
+                    message: 'Ninguna alerta coincide con los filtros actuales.',
                   )
                 else
                   for (final alert in alerts) ...[
@@ -160,8 +161,8 @@ class _AlertsScreenState extends State<AlertsScreen> {
       SnackBar(
         content: Text(
           success
-              ? 'Alert marked as resolved.'
-              : widget.controller.errorMessage ?? 'Unable to resolve the alert.',
+              ? 'Alerta marcada como resuelta.'
+              : widget.controller.errorMessage ?? 'No se pudo resolver la alerta.',
         ),
       ),
     );
@@ -225,7 +226,7 @@ class _StatusFilterField extends StatelessWidget {
   Widget build(BuildContext context) {
     return InputDecorator(
       decoration: const InputDecoration(
-        labelText: 'Status',
+        labelText: 'Estado',
         prefixIcon: Icon(Icons.filter_list_rounded),
         contentPadding: EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
@@ -286,14 +287,14 @@ class _AlertTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${alert.typeLabel} alert',
+                          'Alerta de ${alert.typeLabel}',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: AppSpacing.xxs),
                         Text(
                           alert.deliveryOrderId == null
-                              ? 'Alert #${alert.id} - no linked order'
-                              : 'Alert #${alert.id} - order #${alert.deliveryOrderId}',
+                              ? 'Alerta #${alert.id} - sin pedido vinculado'
+                              : 'Alerta #${alert.id} - pedido #${alert.deliveryOrderId}',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],
@@ -316,7 +317,7 @@ class _AlertTile extends StatelessWidget {
                         ),
                         const SizedBox(width: AppSpacing.xs),
                         Text(
-                          'Resolved',
+                          'Resuelta',
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: AppColors.success,
@@ -336,7 +337,7 @@ class _AlertTile extends StatelessWidget {
                                   CircularProgressIndicator(strokeWidth: 2.2),
                             )
                           : const Icon(Icons.check_circle_outline_rounded),
-                      label: const Text('Mark as resolved'),
+                      label: const Text('Marcar como resuelta'),
                     ),
                   const Spacer(),
                   const Icon(

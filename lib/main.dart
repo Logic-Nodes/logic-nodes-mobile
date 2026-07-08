@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'core/demo/demo_tour.dart';
 import 'core/network/api_client.dart';
 import 'core/network/api_environment.dart';
+import 'core/services/push_notification_service.dart';
 import 'core/routing/app_router.dart';
 import 'core/routing/app_routes.dart';
 import 'core/storage/offline_cache_runner.dart';
@@ -131,6 +132,21 @@ Future<void> main() async {
   );
 
   await sessionController.restore();
+
+  final pushNotificationService = PushNotificationService(apiClient: apiClient);
+  await pushNotificationService.initialize();
+
+  Future<void> syncPushToken() async {
+    final userId = sessionController.session?.user.id;
+    if (userId != null) {
+      await pushNotificationService.syncTokenForUser(userId);
+    }
+  }
+
+  sessionController.addListener(() {
+    syncPushToken();
+  });
+  await syncPushToken();
 
   if (kDemoAutoLogin && kDebugMode && !sessionController.isAuthenticated) {
     try {

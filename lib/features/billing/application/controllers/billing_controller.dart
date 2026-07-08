@@ -52,7 +52,7 @@ class BillingController extends ChangeNotifier {
     } on AppException catch (exception) {
       _errorMessage = exception.message;
     } on Exception {
-      _errorMessage = 'Unable to load billing data from the backend.';
+      _errorMessage = 'No se pudieron cargar los datos de facturación desde el backend.';
     } finally {
       _isLoading = false;
       notifyListeners();

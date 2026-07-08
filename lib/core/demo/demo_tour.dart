@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../routing/app_routes.dart';
@@ -76,7 +75,7 @@ class _DemoTourOverlayState extends State<DemoTourOverlay> {
         route: AppRoutes.profile,
       ),
       const _TourStop(
-        title: 'Analytics',
+        title: 'Analíticas',
         route: AppRoutes.analytics,
       ),
       const _TourStop(

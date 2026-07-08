@@ -26,7 +26,7 @@ class PasswordRecoveryController extends ChangeNotifier {
       onSuccess: () {
         stage = PasswordRecoveryStage.reset;
         feedbackMessage =
-            'Recovery instructions sent. Create your new password to continue.';
+            'Instrucciones de recuperación enviadas. Crea tu nueva contraseña para continuar.';
       },
     );
   }
@@ -37,7 +37,7 @@ class PasswordRecoveryController extends ChangeNotifier {
       onSuccess: () {
         isSuccess = true;
         feedbackMessage =
-            'Password updated successfully. You can sign in again now.';
+            'Contraseña actualizada correctamente. Ya puedes iniciar sesión de nuevo.';
       },
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/utils/design_tokens.dart';
 import '../../../../core/utils/omnitrack_logo.dart';
+import '../../../../core/utils/status_labels.dart';
 import '../../application/controllers/analytics_controller.dart';
 import '../../domain/entities/analytics_trip.dart';
 import '../widgets/analytics_charts.dart';
@@ -44,7 +45,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
             ),
             const SizedBox(height: AppSpacing.xxs),
             Text(
-              'Analytics',
+              'Analíticas',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.inkMuted,
                     fontWeight: FontWeight.w600,
@@ -54,7 +55,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Refresh',
+            tooltip: 'Actualizar',
             onPressed:
                 widget.controller.isLoading ? null : widget.controller.loadDashboard,
             icon: const Icon(Icons.refresh_rounded),
@@ -74,7 +75,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
 
             return _AnalyticsErrorState(
               message: controller.errorMessage ??
-                  'No analytics data is available for this account yet.',
+                  'Aún no hay datos de analíticas disponibles para esta cuenta.',
               onRetry: controller.loadDashboard,
             );
           }
@@ -115,15 +116,15 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Sensor activity overview',
+                          'Resumen de actividad de sensores',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: AppSpacing.xxs),
                         Row(
                           children: [
-                            _LegendDot(color: AppColors.primary, label: 'Temperature'),
+                            _LegendDot(color: AppColors.primary, label: 'Temperatura'),
                             const SizedBox(width: AppSpacing.md),
-                            _LegendDot(color: AppColors.warning, label: 'Movement'),
+                            _LegendDot(color: AppColors.warning, label: 'Movimiento'),
                           ],
                         ),
                         const SizedBox(height: AppSpacing.md),
@@ -307,7 +308,7 @@ class _AnalyticsTripsScreenState extends State<AnalyticsTripsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Trips analytics'),
+        title: const Text('Analíticas de viajes'),
       ),
       body: AnimatedBuilder(
         animation: widget.controller,
@@ -323,7 +324,7 @@ class _AnalyticsTripsScreenState extends State<AnalyticsTripsScreen> {
             return Center(
               child: Text(
                 controller.errorMessage ??
-                    'No trips returned by analytics API.',
+                    'La API de analíticas no devolvió viajes.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: AppColors.inkMuted),
               ),
@@ -430,13 +431,7 @@ class _TripStatusChip extends StatelessWidget {
       _ => AppColors.inkMuted,
     };
 
-    final label = switch (normalized) {
-      'COMPLETED' => 'Completado',
-      'IN_PROGRESS' => 'En curso',
-      'CREATED' => 'Creado',
-      'CANCELLED' => 'Cancelado',
-      _ => status,
-    };
+    final label = StatusLabels.tripStatus(status);
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -524,7 +519,7 @@ class _LiveTelemetryCard extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xxs),
               Text(
-                'Trip ${reading.tripId}',
+                'Viaje ${reading.tripId}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -600,7 +595,7 @@ class _AnalyticsErrorState extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             FilledButton(
               onPressed: onRetry,
-              child: const Text('Retry'),
+              child: const Text('Reintentar'),
             ),
           ],
         ),

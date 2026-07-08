@@ -42,7 +42,7 @@ class ProfileController extends ChangeNotifier {
     } on AppException catch (exception) {
       _errorMessage = exception.message;
     } on Exception {
-      _errorMessage = 'Unable to load profile from the backend.';
+      _errorMessage = 'No se pudo cargar el perfil desde el backend.';
     } finally {
       _isLoading = false;
       notifyListeners();

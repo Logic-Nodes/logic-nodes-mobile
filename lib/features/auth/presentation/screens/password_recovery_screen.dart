@@ -48,17 +48,17 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
                 ? null
                 : () => Navigator.of(context).pop(),
             child: const Text(
-              'Back to log in',
+              'Volver al inicio de sesión',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          title: isRequest ? 'Password Recovery' : 'Create New Password',
+          title: isRequest ? 'Recuperar contraseña' : 'Crear nueva contraseña',
           description: isRequest
-              ? 'Enter your email and we will issue the instructions to reset your password.'
-              : 'Set a new password to recover access to your account.',
+              ? 'Ingresa tu correo y te enviaremos las instrucciones para restablecer tu contraseña.'
+              : 'Establece una nueva contraseña para recuperar el acceso a tu cuenta.',
           child: Form(
             key: isRequest ? _requestFormKey : _resetFormKey,
             child: Column(
@@ -67,7 +67,7 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
                 if (isRequest)
                   AuthTextField(
                     controller: _emailController,
-                    label: 'Email address',
+                    label: 'Correo electrónico',
                     keyboardType: TextInputType.emailAddress,
                     prefixIcon: Icons.alternate_email_rounded,
                     validator: _validateEmail,
@@ -76,7 +76,7 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
                 else ...[
                   AuthTextField(
                     controller: _passwordController,
-                    label: 'New password',
+                    label: 'Nueva contraseña',
                     obscureText: true,
                     prefixIcon: Icons.lock_reset_rounded,
                     validator: _validatePassword,
@@ -85,12 +85,12 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
                   const SizedBox(height: AppSpacing.sm),
                   AuthTextField(
                     controller: _confirmPasswordController,
-                    label: 'Confirm password',
+                    label: 'Confirmar contraseña',
                     obscureText: true,
                     prefixIcon: Icons.verified_user_outlined,
                     validator: (value) {
                       if (value != _passwordController.text) {
-                        return 'Passwords do not match.';
+                        return 'Las contraseñas no coinciden.';
                       }
 
                       return null;
@@ -123,7 +123,7 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
                           ),
                         )
                       : Text(
-                          isRequest ? 'Send Recovery' : 'Reset Password',
+                          isRequest ? 'Enviar recuperación' : 'Restablecer contraseña',
                         ),
                 ),
               ],
@@ -165,11 +165,11 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
   String? _validateEmail(String? value) {
     final email = value?.trim() ?? '';
     if (email.isEmpty) {
-      return 'Email is required.';
+      return 'El correo es obligatorio.';
     }
 
     if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-      return 'Enter a valid email.';
+      return 'Ingresa un correo válido.';
     }
 
     return null;
@@ -177,7 +177,7 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
 
   String? _validatePassword(String? value) {
     if ((value?.length ?? 0) < 8) {
-      return 'Use at least 8 characters.';
+      return 'Usa al menos 8 caracteres.';
     }
 
     return null;

@@ -55,7 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: const Text('Perfil'),
       ),
       body: AnimatedBuilder(
         animation: widget.controller,
@@ -72,14 +72,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.all(AppSpacing.md),
             children: [
               Text(
-                'Edit your profile',
+                'Edita tu perfil',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: AppSpacing.lg),
               TextField(
                 controller: _firstNameController,
                 decoration: const InputDecoration(
-                  labelText: 'First name',
+                  labelText: 'Nombre',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -87,7 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextField(
                 controller: _lastNameController,
                 decoration: const InputDecoration(
-                  labelText: 'Last name',
+                  labelText: 'Apellido',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -95,7 +95,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextField(
                 controller: _phoneController,
                 decoration: const InputDecoration(
-                  labelText: 'Phone number',
+                  labelText: 'Teléfono',
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.phone,
@@ -120,7 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       )
                     : const Icon(Icons.save_outlined),
-                label: const Text('Save changes'),
+                label: const Text('Guardar cambios'),
               ),
               const SizedBox(height: AppSpacing.lg),
               OutlinedButton.icon(
@@ -128,7 +128,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ? null
                     : () => _signOutAll(context),
                 icon: const Icon(Icons.devices_other_outlined),
-                label: const Text('Sign out from all devices'),
+                label: const Text('Cerrar sesión en todos los dispositivos'),
               ),
               const SizedBox(height: AppSpacing.sm),
               TextButton.icon(
@@ -136,7 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ? null
                     : () => _signOut(context),
                 icon: const Icon(Icons.logout_rounded),
-                label: const Text('Sign out'),
+                label: const Text('Cerrar sesión'),
               ),
             ],
           );
@@ -160,8 +160,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       SnackBar(
         content: Text(
           success
-              ? 'Profile updated.'
-              : widget.controller.errorMessage ?? 'Unable to update profile.',
+              ? 'Perfil actualizado.'
+              : widget.controller.errorMessage ?? 'No se pudo actualizar el perfil.',
         ),
       ),
     );

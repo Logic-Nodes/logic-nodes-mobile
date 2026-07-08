@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/design_tokens.dart';
+import '../../../../core/utils/status_labels.dart';
 import '../../application/controllers/alerts_controller.dart';
 import '../../domain/entities/alert.dart';
 import '../../domain/entities/incident.dart';
@@ -44,13 +45,13 @@ class _AlertDetailsScreenState extends State<AlertDetailsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Alert details'),
+        title: const Text('Detalle de alerta'),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'Details'),
-            Tab(text: 'Incidents'),
-            Tab(text: 'Notifications'),
+            Tab(text: 'Detalles'),
+            Tab(text: 'Incidentes'),
+            Tab(text: 'Notificaciones'),
           ],
         ),
       ),
@@ -126,7 +127,7 @@ class _DetailsTab extends StatelessWidget {
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Text(
-                          '${alert.typeLabel} alert',
+                          'Alerta de ${alert.typeLabel}',
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                       ),
@@ -134,26 +135,26 @@ class _DetailsTab extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  _DetailRow(label: 'Alert ID', value: '#${alert.id}'),
+                  _DetailRow(label: 'ID de alerta', value: '#${alert.id}'),
                   const Divider(height: AppSpacing.lg),
-                  _DetailRow(label: 'Type', value: alert.typeLabel),
+                  _DetailRow(label: 'Tipo', value: alert.typeLabel),
                   const Divider(height: AppSpacing.lg),
-                  _DetailRow(label: 'Status', value: alert.status.label),
+                  _DetailRow(label: 'Estado', value: alert.status.label),
                   const Divider(height: AppSpacing.lg),
                   _DetailRow(
-                    label: 'Delivery order',
+                    label: 'Pedido de entrega',
                     value: alert.deliveryOrderId == null
-                        ? 'Not linked'
+                        ? 'Sin vincular'
                         : '#${alert.deliveryOrderId}',
                   ),
                   const Divider(height: AppSpacing.lg),
                   _DetailRow(
-                    label: 'Created',
+                    label: 'Creada',
                     value: _formatDate(alert.createdAt),
                   ),
                   const Divider(height: AppSpacing.lg),
                   _DetailRow(
-                    label: 'Last update',
+                    label: 'Última actualización',
                     value: _formatDate(alert.lastActivityAt),
                   ),
                 ],
@@ -170,7 +171,7 @@ class _DetailsTab extends StatelessWidget {
                     ? null
                     : () => _acknowledge(context, alert.id),
                 icon: const Icon(Icons.visibility_outlined),
-                label: const Text('Acknowledge'),
+                label: const Text('Reconocer'),
               ),
             if (alert.status == AlertStatus.open)
               const SizedBox(height: AppSpacing.sm),
@@ -187,7 +188,7 @@ class _DetailsTab extends StatelessWidget {
                       ),
                     )
                   : const Icon(Icons.check_circle_outline_rounded),
-              label: const Text('Mark as resolved'),
+              label: const Text('Marcar como resuelta'),
             ),
           ],
         ],
@@ -205,8 +206,8 @@ class _DetailsTab extends StatelessWidget {
       SnackBar(
         content: Text(
           success
-              ? 'Alert acknowledged in the backend.'
-              : controller.errorMessage ?? 'Unable to acknowledge the alert.',
+              ? 'Alerta reconocida en el backend.'
+              : controller.errorMessage ?? 'No se pudo reconocer la alerta.',
         ),
       ),
     );
@@ -222,8 +223,8 @@ class _DetailsTab extends StatelessWidget {
       SnackBar(
         content: Text(
           success
-              ? 'Alert marked as resolved.'
-              : controller.errorMessage ?? 'Unable to resolve the alert.',
+              ? 'Alerta marcada como resuelta.'
+              : controller.errorMessage ?? 'No se pudo resolver la alerta.',
         ),
       ),
     );
@@ -231,7 +232,7 @@ class _DetailsTab extends StatelessWidget {
 
   String _formatDate(DateTime? value) {
     if (value == null) {
-      return 'Unknown';
+      return 'Desconocido';
     }
 
     final local = value.toLocal();
@@ -252,7 +253,7 @@ class _IncidentsTab extends StatelessWidget {
     if (incidents.isEmpty) {
       return const Center(
         child: Text(
-          'No incidents linked to this alert.',
+          'No hay incidentes vinculados a esta alerta.',
           style: TextStyle(color: AppColors.inkMuted),
         ),
       );
@@ -266,10 +267,10 @@ class _IncidentsTab extends StatelessWidget {
         final incident = incidents[index];
         return Card(
           child: ListTile(
-            title: Text(incident.type),
+            title: Text(StatusLabels.alertType(incident.type)),
             subtitle: Text(
               [
-                incident.status,
+                StatusLabels.alertStatus(incident.status),
                 if (incident.description != null) incident.description!,
               ].join(' · '),
             ),
@@ -290,7 +291,7 @@ class _NotificationsTab extends StatelessWidget {
     if (notifications.isEmpty) {
       return const Center(
         child: Text(
-          'No notifications linked to this alert.',
+          'No hay notificaciones vinculadas a esta alerta.',
           style: TextStyle(color: AppColors.inkMuted),
         ),
       );
@@ -304,7 +305,9 @@ class _NotificationsTab extends StatelessWidget {
         final notification = notifications[index];
         return Card(
           child: ListTile(
-            title: Text('${notification.channel} · ${notification.status}'),
+            title: Text(
+              '${notification.channel} · ${StatusLabels.deliveryStatus(notification.status)}',
+            ),
             subtitle: Text(
               [
                 if (notification.recipient != null) notification.recipient!,
@@ -333,7 +336,7 @@ class _ResolvedBanner extends StatelessWidget {
             SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
-                'This alert is already resolved in the backend.',
+                'Esta alerta ya está resuelta en el backend.',
                 style: TextStyle(
                   color: AppColors.ink,
                   fontWeight: FontWeight.w600,
