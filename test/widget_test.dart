@@ -85,9 +85,9 @@ void main() {
       ),
     );
 
-    expect(find.text('WELCOME'), findsOneWidget);
-    expect(find.text('Sign In'), findsOneWidget);
-    expect(find.text('Backend connection'), findsOneWidget);
+    expect(find.text('BIENVENIDO'), findsOneWidget);
+    expect(find.text('Iniciar sesión'), findsOneWidget);
+    expect(find.text('Conexión al backend'), findsOneWidget);
   });
 }
 

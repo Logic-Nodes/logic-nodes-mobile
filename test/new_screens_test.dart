@@ -55,10 +55,10 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Subscription'), findsOneWidget);
+    expect(find.text('Suscripción'), findsOneWidget);
     expect(find.textContaining('PROFESSIONAL'), findsOneWidget);
-    expect(find.text('Add card'), findsOneWidget);
-    expect(find.text('Upgrade your plan'), findsOneWidget);
+    expect(find.text('Agregar tarjeta'), findsOneWidget);
+    expect(find.text('Mejorar tu plan'), findsOneWidget);
   });
 
   test('BillingController loads snapshot and changes/cancels via the repository',
@@ -112,8 +112,8 @@ void main() {
     expect(controller.visibleAlerts.length, 1);
 
     controller.changeFilter(AlertStatusFilter.all);
-    controller.search('humidity');
-    expect(controller.visibleAlerts.single.typeLabel, 'Humidity');
+    controller.search('humedad');
+    expect(controller.visibleAlerts.single.typeLabel, 'Humedad');
 
     controller.search('');
     final resolved = await controller.resolve('1');

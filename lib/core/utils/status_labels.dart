@@ -33,6 +33,7 @@ abstract final class StatusLabels {
       'TEMPERATURE' => 'Temperatura',
       'DELAY' => 'Retraso',
       'VIBRATION' => 'Vibración',
+      'HUMIDITY' => 'Humedad',
       'GEOFENCE' => 'Geocerca',
       _ => type ?? '—',
     };
