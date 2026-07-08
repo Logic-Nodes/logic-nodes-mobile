@@ -32,5 +32,16 @@ abstract class AuthRepository {
     required String password,
   });
 
-  Future<void> signOut();
+  Future<AuthSession> refreshSession({
+    required AuthSession currentSession,
+  });
+
+  Future<void> signOut({
+    String? refreshToken,
+  });
+
+  Future<void> signOutAll({
+    required String accessToken,
+    required String userId,
+  });
 }

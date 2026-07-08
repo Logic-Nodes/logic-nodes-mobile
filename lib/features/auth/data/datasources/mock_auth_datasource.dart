@@ -40,7 +40,7 @@ class MockAuthDatasource {
 
     if (account == null || account.password != password) {
       throw const AuthException(
-        'Authentication failed. Check your credentials and try again.',
+        'No se pudo autenticar. Revisa tus credenciales e inténtalo de nuevo.',
       );
     }
 
@@ -115,7 +115,7 @@ class MockAuthDatasource {
 
     if (!exists) {
       throw const AuthException(
-        'No account is linked to that email address.',
+        'No hay ninguna cuenta asociada a ese correo.',
       );
     }
   }
@@ -127,7 +127,7 @@ class MockAuthDatasource {
 
     if (password.length < 8) {
       throw const AuthException(
-        'The new password must contain at least 8 characters.',
+        'La nueva contraseña debe tener al menos 8 caracteres.',
       );
     }
   }
@@ -143,7 +143,7 @@ class MockAuthDatasource {
 
     if (alreadyExists) {
       throw const AuthException(
-        'This email is already registered in OmniTrack.',
+        'Este correo ya está registrado en OmniTrack.',
       );
     }
   }

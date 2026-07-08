@@ -75,7 +75,27 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> signOut() {
+  Future<AuthSession> refreshSession({
+    required AuthSession currentSession,
+  }) async {
+    return AuthSession(
+      accessToken: currentSession.accessToken,
+      refreshToken: currentSession.refreshToken,
+      user: currentSession.user,
+      expiresAt: DateTime.now().add(const Duration(hours: 8)),
+    );
+  }
+
+  @override
+  Future<void> signOut({
+    String? refreshToken,
+  }) {
     return datasource.signOut();
   }
+
+  @override
+  Future<void> signOutAll({
+    required String accessToken,
+    required String userId,
+  }) async {}
 }

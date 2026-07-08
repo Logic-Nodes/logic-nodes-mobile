@@ -15,12 +15,12 @@ class SignInUseCase {
     final normalizedPassword = password.trim();
 
     if (!_looksLikeEmail(normalizedEmail)) {
-      throw const AuthException('Enter a valid email address.');
+      throw const AuthException('Ingresa una dirección de correo válida.');
     }
 
     if (normalizedPassword.length < 8) {
       throw const AuthException(
-        'Password must contain at least 8 characters.',
+        'La contraseña debe tener al menos 8 caracteres.',
       );
     }
 

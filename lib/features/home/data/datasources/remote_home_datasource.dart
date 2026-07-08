@@ -115,7 +115,7 @@ class RemoteHomeDatasource {
 
       final scopeApplied = !isFleetManager || merchantId != null;
       final scopeNotice = isFleetManager && merchantId == null
-          ? 'No merchant relation was found for the authenticated user. Showing global fleet inventory and all visible trips.'
+          ? 'No se encontró una relación con un comercio para el usuario autenticado. Se muestra el inventario global de la flota y todos los viajes visibles.'
           : null;
 
       return HomeDashboardModel(
@@ -133,7 +133,7 @@ class RemoteHomeDatasource {
     } on AppException {
       rethrow;
     } on Exception catch (exception) {
-      throw AppException('Unable to load home workspace data. $exception');
+      throw AppException('No se pudieron cargar los datos del inicio. $exception');
     }
   }
 
@@ -229,7 +229,7 @@ class RemoteHomeDatasource {
       return value.cast<Object?>();
     }
 
-    throw AppException('Unexpected response received from $source.');
+    throw AppException('Respuesta inesperada del servidor.');
   }
 
   Map<String, String> _authHeaders(String accessToken) {

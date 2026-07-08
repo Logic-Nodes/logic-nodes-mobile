@@ -1,3 +1,5 @@
+import '../../../../core/utils/status_labels.dart';
+
 enum AlertStatus {
   open,
   acknowledged,
@@ -17,11 +19,11 @@ enum AlertStatus {
   String get label {
     switch (this) {
       case AlertStatus.open:
-        return 'Open';
+        return StatusLabels.alertStatus('OPEN');
       case AlertStatus.acknowledged:
-        return 'Acknowledged';
+        return StatusLabels.alertStatus('ACKNOWLEDGED');
       case AlertStatus.closed:
-        return 'Resolved';
+        return StatusLabels.alertStatus('CLOSED');
     }
   }
 
@@ -47,12 +49,7 @@ class Alert {
 
   DateTime? get lastActivityAt => updatedAt ?? createdAt;
 
-  String get typeLabel => type
-      .toLowerCase()
-      .split('_')
-      .where((part) => part.isNotEmpty)
-      .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
-      .join(' ');
+  String get typeLabel => StatusLabels.alertType(type);
 
   Alert copyWith({AlertStatus? status, DateTime? updatedAt}) {
     return Alert(

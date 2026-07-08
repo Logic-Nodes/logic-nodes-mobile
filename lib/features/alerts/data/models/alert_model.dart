@@ -14,8 +14,8 @@ class AlertModel {
     return AlertModel(
       id: _stringValue(map['id']),
       deliveryOrderId: _nullableStringValue(map['deliveryOrderId']),
-      type: _stringValue(map['alertType']).toUpperCase(),
-      status: _stringValue(map['alertStatus']).toUpperCase(),
+      type: _stringValue(map['alertType'] ?? map['type']).toUpperCase(),
+      status: _stringValue(map['alertStatus'] ?? map['status']).toUpperCase(),
       createdAt: _dateValue(map['createdAt']),
       updatedAt: _dateValue(map['updatedAt']),
     );

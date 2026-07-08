@@ -49,7 +49,7 @@ class RegisterController extends ChangeNotifier {
         password: password,
       ),
       successMessage:
-          'Company account created. You can sign in with the administrator account.',
+          'Cuenta de empresa creada. Puedes iniciar sesión con la cuenta del administrador.',
     );
   }
 
@@ -67,7 +67,7 @@ class RegisterController extends ChangeNotifier {
         password: password,
       ),
       successMessage:
-          'Client account created. Use your new credentials to access OmniTrack.',
+          'Cuenta de cliente creada. Usa tus nuevas credenciales para acceder a OmniTrack.',
     );
   }
 

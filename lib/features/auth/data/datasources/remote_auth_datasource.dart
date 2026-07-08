@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/network/api_environment.dart';
 import '../../domain/entities/auth_user.dart';
 import '../models/auth_session_model.dart';
 
@@ -9,7 +10,6 @@ class RemoteAuthDatasource {
   });
 
   final ApiClient apiClient;
-  String? _lastRefreshToken;
   String? _lastResetToken;
 
   Future<AuthSessionModel> signIn({
@@ -51,8 +51,6 @@ class RemoteAuthDatasource {
             )
           : null;
 
-      _lastRefreshToken = refreshToken;
-
       return AuthSessionModel.fromBackend(
         tokenPair: tokenMap,
         verifiedUser: verifiedUserMap,
@@ -62,16 +60,39 @@ class RemoteAuthDatasource {
     } on ApiException catch (exception) {
       if (exception.statusCode == 401) {
         throw const AuthException(
-          'Authentication failed. Check your credentials and try again.',
+          'No se pudo autenticar. Revisa tus credenciales e inténtalo de nuevo.',
         );
       }
 
       throw AuthException(exception.message);
     } on AppException catch (exception) {
       throw AuthException(
-        '${exception.message} If you are testing on a physical device, pass '
-        '--dart-define=OMNITRACK_API_BASE_URL=http://<YOUR_LAN_IP>:3000.',
+        '${exception.message} ${ApiEnvironment.localDevDartDefineHint}',
       );
+    }
+  }
+
+  Future<AuthSessionModel> refreshSession({
+    required String refreshToken,
+    required AuthUserModel user,
+  }) async {
+    try {
+      final tokenPair = await apiClient.post(
+        '/api/v1/authentication/refresh',
+        body: {
+          'refreshToken': refreshToken,
+        },
+        expectedStatusCodes: const {200},
+      );
+
+      return AuthSessionModel.fromTokenPair(
+        tokenPair: _expectMap(tokenPair, 'refresh response'),
+        user: user,
+      );
+    } on ApiException catch (exception) {
+      throw AuthException(exception.message);
+    } on AppException catch (exception) {
+      throw AuthException(exception.message);
     }
   }
 
@@ -202,8 +223,8 @@ class RemoteAuthDatasource {
     final resetToken = _lastResetToken;
     if (resetToken == null) {
       throw const AuthException(
-        'We could not match that email to an account. Request the recovery '
-        'instructions again to continue.',
+        'No encontramos una cuenta con ese correo. Vuelve a solicitar las '
+        'instrucciones de recuperación para continuar.',
       );
     }
 
@@ -224,10 +245,27 @@ class RemoteAuthDatasource {
     }
   }
 
-  Future<void> signOut() async {
-    final refreshToken = _lastRefreshToken;
-    _lastRefreshToken = null;
+  Future<void> signOutAll({
+    required String accessToken,
+    required String userId,
+  }) async {
+    try {
+      await apiClient.post(
+        '/api/v1/authentication/logout-all',
+        headers: _authHeaders(accessToken),
+        body: {
+          'userId': userId,
+        },
+        expectedStatusCodes: const {200, 204},
+      );
+    } on AppException {
+      // Local sign-out should continue even when the backend is unavailable.
+    }
+  }
 
+  Future<void> signOut({
+    required String? refreshToken,
+  }) async {
     if (refreshToken == null || refreshToken.isEmpty) {
       return;
     }
@@ -255,6 +293,10 @@ class RemoteAuthDatasource {
         headers: headers,
         expectedStatusCodes: const {200},
       );
+      if (response == null) {
+        return null;
+      }
+
       return _expectMap(response, path);
     } on ApiException catch (exception) {
       if (exception.statusCode == 404) {
@@ -310,7 +352,7 @@ class RemoteAuthDatasource {
       return value;
     }
 
-    throw AuthException('Unexpected response received from $source.');
+    throw AuthException('Respuesta inesperada del servidor.');
   }
 
   String _expectString(Object? value, String fieldName) {

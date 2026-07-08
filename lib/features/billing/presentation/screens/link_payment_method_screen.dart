@@ -40,7 +40,7 @@ class _LinkPaymentMethodScreenState extends State<LinkPaymentMethodScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Link payment method'),
+        title: const Text('Vincular método de pago'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -52,13 +52,13 @@ class _LinkPaymentMethodScreenState extends State<LinkPaymentMethodScreen> {
               const _NoBackendNotice(),
               const SizedBox(height: AppSpacing.md),
               Text(
-                'LINK PAYMENT METHOD',
+                'VINCULAR MÉTODO DE PAGO',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: AppSpacing.lg),
               AuthTextField(
                 controller: _cardNumberController,
-                label: 'Card number',
+                label: 'Número de tarjeta',
                 keyboardType: TextInputType.number,
                 prefixIcon: Icons.credit_card_rounded,
                 inputFormatters: [
@@ -68,7 +68,7 @@ class _LinkPaymentMethodScreenState extends State<LinkPaymentMethodScreen> {
                 validator: (value) {
                   final digits = (value ?? '').replaceAll(RegExp(r'\D'), '');
                   if (digits.length < 13) {
-                    return 'Enter a valid card number.';
+                    return 'Ingresa un número de tarjeta válido.';
                   }
                   return null;
                 },
@@ -79,14 +79,14 @@ class _LinkPaymentMethodScreenState extends State<LinkPaymentMethodScreen> {
                   Expanded(
                     child: AuthTextField(
                       controller: _expireController,
-                      label: 'Expire date',
+                      label: 'Fecha de vencimiento',
                       hintText: 'MM/YY',
                       keyboardType: TextInputType.datetime,
                       prefixIcon: Icons.event_rounded,
                       validator: (value) {
                         if (!RegExp(r'^\d{2}/\d{2}$')
                             .hasMatch((value ?? '').trim())) {
-                          return 'Use MM/YY.';
+                          return 'Usa MM/AA.';
                         }
                         return null;
                       },
@@ -105,7 +105,7 @@ class _LinkPaymentMethodScreenState extends State<LinkPaymentMethodScreen> {
                       ],
                       validator: (value) {
                         if ((value ?? '').trim().length < 3) {
-                          return 'Invalid CVC.';
+                          return 'CVC inválido.';
                         }
                         return null;
                       },
@@ -119,12 +119,12 @@ class _LinkPaymentMethodScreenState extends State<LinkPaymentMethodScreen> {
                   Expanded(
                     child: AuthTextField(
                       controller: _postalController,
-                      label: 'Postal code',
+                      label: 'Código postal',
                       keyboardType: TextInputType.number,
                       prefixIcon: Icons.local_post_office_outlined,
                       validator: (value) {
                         if ((value ?? '').trim().isEmpty) {
-                          return 'Required.';
+                          return 'Obligatorio.';
                         }
                         return null;
                       },
@@ -134,11 +134,11 @@ class _LinkPaymentMethodScreenState extends State<LinkPaymentMethodScreen> {
                   Expanded(
                     child: AuthTextField(
                       controller: _countryController,
-                      label: 'Country',
+                      label: 'País',
                       prefixIcon: Icons.public_rounded,
                       validator: (value) {
                         if ((value ?? '').trim().isEmpty) {
-                          return 'Required.';
+                          return 'Obligatorio.';
                         }
                         return null;
                       },
@@ -149,7 +149,7 @@ class _LinkPaymentMethodScreenState extends State<LinkPaymentMethodScreen> {
               const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: _confirm,
-                child: const Text('CONFIRM'),
+                child: const Text('CONFIRMAR'),
               ),
             ],
           ),
@@ -170,8 +170,7 @@ class _LinkPaymentMethodScreenState extends State<LinkPaymentMethodScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-          'Card validated. Linking will persist once the backend exposes the '
-          'payments endpoint.',
+          'Tarjeta validada. La vinculación se guardará cuando el backend exponga el endpoint de pagos.',
         ),
       ),
     );
@@ -194,8 +193,7 @@ class _NoBackendNotice extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
-                'Card linking is not yet exposed by the billing backend, so the '
-                'card is only validated locally. No card data is sent.',
+                'La vinculación de tarjetas aún no está disponible en el backend de facturación, por lo que la tarjeta solo se valida localmente. No se envían datos de la tarjeta.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.ink,
                     ),

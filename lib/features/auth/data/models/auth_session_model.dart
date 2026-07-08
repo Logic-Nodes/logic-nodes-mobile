@@ -122,6 +122,36 @@ class AuthSessionModel {
     );
   }
 
+  factory AuthSessionModel.fromTokenPair({
+    required Map<String, dynamic> tokenPair,
+    required AuthUserModel user,
+  }) {
+    final accessToken = tokenPair['accessToken'] as String? ?? '';
+    final refreshToken = tokenPair['refreshToken'] as String? ?? '';
+
+    return AuthSessionModel(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      user: user,
+      expiresAt: _extractExpiryFromJwt(accessToken),
+    );
+  }
+
+  factory AuthSessionModel.fromDomain(AuthSession session) {
+    return AuthSessionModel(
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
+      expiresAt: session.expiresAt,
+      user: AuthUserModel(
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        role: session.user.role,
+        companyName: session.user.companyName,
+      ),
+    );
+  }
+
   AuthSession toDomain() {
     return AuthSession(
       accessToken: accessToken,

@@ -1,6 +1,9 @@
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/network/api_helpers.dart';
 import '../models/alert_model.dart';
+import '../models/incident_model.dart';
+import '../models/notification_model.dart';
 
 class RemoteAlertDatasource {
   RemoteAlertDatasource({
@@ -12,21 +15,33 @@ class RemoteAlertDatasource {
   Future<List<AlertModel>> listAlerts({
     required String accessToken,
   }) async {
-    try {
-      final response = await apiClient.get(
-        '/api/v1/alerts',
-        headers: _authHeaders(accessToken),
-        expectedStatusCodes: const {200},
-      );
+    return _listAlertsFromPath(
+      accessToken: accessToken,
+      path: '/api/v1/alerts',
+      source: 'alerts',
+    );
+  }
 
-      final rows = _expectList(response, 'alerts');
-      return rows
-          .whereType<Map<String, dynamic>>()
-          .map(AlertModel.fromMap)
-          .toList(growable: false);
-    } on ApiException catch (exception) {
-      throw AppException(exception.message);
-    }
+  Future<List<AlertModel>> listAlertsByType({
+    required String accessToken,
+    required String type,
+  }) async {
+    return _listAlertsFromPath(
+      accessToken: accessToken,
+      path: '/api/v1/alerts/type/$type',
+      source: 'alerts by type',
+    );
+  }
+
+  Future<List<AlertModel>> listAlertsByStatus({
+    required String accessToken,
+    required String status,
+  }) async {
+    return _listAlertsFromPath(
+      accessToken: accessToken,
+      path: '/api/v1/alerts/status/$status',
+      source: 'alerts by status',
+    );
   }
 
   Future<AlertModel> getAlert({
@@ -36,11 +51,51 @@ class RemoteAlertDatasource {
     try {
       final response = await apiClient.get(
         '/api/v1/alerts/$alertId',
-        headers: _authHeaders(accessToken),
+        headers: authHeaders(accessToken),
         expectedStatusCodes: const {200},
       );
 
-      return AlertModel.fromMap(_expectMap(response, 'alert'));
+      return AlertModel.fromMap(expectMap(response, 'alert'));
+    } on ApiException catch (exception) {
+      throw AppException(exception.message);
+    }
+  }
+
+  Future<List<IncidentModel>> listIncidentsByAlert({
+    required String accessToken,
+    required String alertId,
+  }) async {
+    try {
+      final response = await apiClient.get(
+        '/api/v1/incidents/alert/$alertId',
+        headers: authHeaders(accessToken),
+        expectedStatusCodes: const {200},
+      );
+
+      return expectList(response, 'incidents')
+          .whereType<Map<String, dynamic>>()
+          .map(IncidentModel.fromMap)
+          .toList(growable: false);
+    } on ApiException catch (exception) {
+      throw AppException(exception.message);
+    }
+  }
+
+  Future<List<NotificationModel>> listNotificationsByAlert({
+    required String accessToken,
+    required String alertId,
+  }) async {
+    try {
+      final response = await apiClient.get(
+        '/api/v1/notifications/alert/$alertId',
+        headers: authHeaders(accessToken),
+        expectedStatusCodes: const {200},
+      );
+
+      return expectList(response, 'notifications')
+          .whereType<Map<String, dynamic>>()
+          .map(NotificationModel.fromMap)
+          .toList(growable: false);
     } on ApiException catch (exception) {
       throw AppException(exception.message);
     }
@@ -73,35 +128,35 @@ class RemoteAlertDatasource {
     try {
       final response = await apiClient.patch(
         path,
-        headers: _authHeaders(accessToken),
+        headers: authHeaders(accessToken),
         expectedStatusCodes: const {200},
       );
 
-      return AlertModel.fromMap(_expectMap(response, 'alert'));
+      return AlertModel.fromMap(expectMap(response, 'alert'));
     } on ApiException catch (exception) {
       throw AppException(exception.message);
     }
   }
 
-  Map<String, String> _authHeaders(String accessToken) {
-    return {
-      'Authorization': 'Bearer $accessToken',
-    };
-  }
+  Future<List<AlertModel>> _listAlertsFromPath({
+    required String accessToken,
+    required String path,
+    required String source,
+  }) async {
+    try {
+      final response = await apiClient.get(
+        path,
+        headers: authHeaders(accessToken),
+        expectedStatusCodes: const {200},
+      );
 
-  List<Object?> _expectList(Object? value, String source) {
-    if (value is List) {
-      return value.cast<Object?>();
+      final rows = expectList(response, source);
+      return rows
+          .whereType<Map<String, dynamic>>()
+          .map(AlertModel.fromMap)
+          .toList(growable: false);
+    } on ApiException catch (exception) {
+      throw AppException(exception.message);
     }
-
-    throw AppException('Unexpected response received from $source.');
-  }
-
-  Map<String, dynamic> _expectMap(Object? value, String source) {
-    if (value is Map<String, dynamic>) {
-      return value;
-    }
-
-    throw AppException('Unexpected response received from $source.');
   }
 }

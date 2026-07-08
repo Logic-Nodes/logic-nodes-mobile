@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logic_nodes_mobile/core/routing/app_router.dart';
 import 'package:logic_nodes_mobile/core/routing/app_routes.dart';
@@ -11,10 +12,20 @@ import 'package:logic_nodes_mobile/features/auth/data/repositories/mock_auth_rep
 import 'package:logic_nodes_mobile/features/auth/domain/entities/auth_session.dart';
 import 'package:logic_nodes_mobile/features/alerts/application/controllers/alerts_controller.dart';
 import 'package:logic_nodes_mobile/features/alerts/domain/entities/alert.dart';
+import 'package:logic_nodes_mobile/features/alerts/domain/entities/incident.dart';
+import 'package:logic_nodes_mobile/features/alerts/domain/entities/notification.dart';
 import 'package:logic_nodes_mobile/features/alerts/domain/repositories/alert_repository.dart';
 import 'package:logic_nodes_mobile/features/billing/application/controllers/billing_controller.dart';
 import 'package:logic_nodes_mobile/features/billing/domain/entities/subscription.dart';
 import 'package:logic_nodes_mobile/features/billing/domain/repositories/billing_repository.dart';
+import 'package:logic_nodes_mobile/features/analytics/application/controllers/analytics_controller.dart';
+import 'package:logic_nodes_mobile/features/analytics/domain/repositories/analytics_repository.dart';
+import 'package:logic_nodes_mobile/features/fleet/application/controllers/fleet_controller.dart';
+import 'package:logic_nodes_mobile/features/fleet/domain/repositories/fleet_repository.dart';
+import 'package:logic_nodes_mobile/features/profile/application/controllers/profile_controller.dart';
+import 'package:logic_nodes_mobile/features/profile/domain/repositories/profile_repository.dart';
+import 'package:logic_nodes_mobile/features/trips/application/controllers/trips_controller.dart';
+import 'package:logic_nodes_mobile/features/trips/domain/repositories/trips_repository.dart';
 import 'package:logic_nodes_mobile/features/home/application/controllers/home_controller.dart';
 import 'package:logic_nodes_mobile/features/home/domain/entities/home_dashboard.dart';
 import 'package:logic_nodes_mobile/features/home/domain/repositories/home_repository.dart';
@@ -26,12 +37,14 @@ void main() {
       datasource: MockAuthDatasource(),
     );
     final sessionController = SessionController(
-      sessionStore: MemoryStore<AuthSession>(),
+      sessionStore: MemorySessionStore(),
       authRepository: repository,
     );
 
     await tester.pumpWidget(
       OmniTrackApp(
+        navigatorKey: GlobalKey<NavigatorState>(),
+        demoTourEnabled: false,
         router: AppRouter(
           initialRoute: AppRoutes.login,
           signInUseCase: SignInUseCase(repository),
@@ -47,8 +60,24 @@ void main() {
             alertRepository: _FakeAlertRepository(),
             sessionController: sessionController,
           ),
-          billingControllerFactory: () => BillingController(
+          fleetControllerFactory: () => FleetController(
+            fleetRepository: _FakeFleetRepository(),
+            sessionController: sessionController,
+          ),
+          billingController: BillingController(
             billingRepository: _FakeBillingRepository(),
+            sessionController: sessionController,
+          ),
+          analyticsController: AnalyticsController(
+            analyticsRepository: _FakeAnalyticsRepository(),
+            sessionController: sessionController,
+          ),
+          tripsControllerFactory: () => TripsController(
+            tripsRepository: _FakeTripsRepository(),
+            sessionController: sessionController,
+          ),
+          profileControllerFactory: () => ProfileController(
+            profileRepository: _FakeProfileRepository(),
             sessionController: sessionController,
           ),
           sessionController: sessionController,
@@ -56,9 +85,9 @@ void main() {
       ),
     );
 
-    expect(find.text('WELCOME'), findsOneWidget);
-    expect(find.text('Sign In'), findsOneWidget);
-    expect(find.text('Backend connection'), findsOneWidget);
+    expect(find.text('BIENVENIDO'), findsOneWidget);
+    expect(find.text('Iniciar sesión'), findsOneWidget);
+    expect(find.text('Conexión al backend'), findsOneWidget);
   });
 }
 
@@ -67,11 +96,39 @@ class _FakeAlertRepository implements AlertRepository {
   Future<List<Alert>> listAlerts({required String accessToken}) async => const [];
 
   @override
+  Future<List<Alert>> listAlertsByType({
+    required String accessToken,
+    required String type,
+  }) async =>
+      const [];
+
+  @override
+  Future<List<Alert>> listAlertsByStatus({
+    required String accessToken,
+    required String status,
+  }) async =>
+      const [];
+
+  @override
   Future<Alert> getAlert({
     required String accessToken,
     required String alertId,
   }) async =>
       Alert(id: alertId, type: 'OTHER', status: AlertStatus.open);
+
+  @override
+  Future<List<Incident>> listIncidentsByAlert({
+    required String accessToken,
+    required String alertId,
+  }) async =>
+      const [];
+
+  @override
+  Future<List<AlertNotification>> listNotificationsByAlert({
+    required String accessToken,
+    required String alertId,
+  }) async =>
+      const [];
 
   @override
   Future<Alert> resolveAlert({
@@ -163,4 +220,24 @@ class _FakeHomeRepository implements HomeRepository {
       scopeApplied: true,
     );
   }
+}
+
+class _FakeFleetRepository implements FleetRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeAnalyticsRepository implements AnalyticsRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeTripsRepository implements TripsRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeProfileRepository implements ProfileRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

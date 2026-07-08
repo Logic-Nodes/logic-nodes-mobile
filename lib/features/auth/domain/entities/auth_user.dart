@@ -1,6 +1,6 @@
 enum UserRole {
-  fleetManager('Fleet Manager'),
-  customer('Customer');
+  fleetManager('Gerente de flota'),
+  customer('Cliente');
 
   const UserRole(this.label);
 

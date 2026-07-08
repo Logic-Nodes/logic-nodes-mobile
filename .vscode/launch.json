@@ -1,0 +1,50 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "iOS · Render (producción)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "apple_ios_simulator"
+    },
+    {
+      "name": "iOS · Backend local (127.0.0.1:3001)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "apple_ios_simulator",
+      "toolArgs": [
+        "--dart-define=OMNITRACK_API_BASE_URL=http://127.0.0.1:3001"
+      ]
+    },
+    {
+      "name": "iOS · ngrok / proxy URL",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "apple_ios_simulator",
+      "toolArgs": [
+        "--dart-define=OMNITRACK_API_BASE_URL=https://TU-SUBDOMINIO.ngrok-free.app"
+      ]
+    },
+    {
+      "name": "iOS · Local E2E (backend + demo)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "apple_ios_simulator",
+      "toolArgs": [
+        "--dart-define=OMNITRACK_API_BASE_URL=http://127.0.0.1:3001",
+        "--dart-define=DEMO_AUTO_LOGIN=true",
+        "--dart-define=DEMO_TOUR=true"
+      ]
+    },
+    {
+      "name": "iOS · Demo tour (auto-login)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "apple_ios_simulator",
+      "toolArgs": [
+        "--dart-define=DEMO_AUTO_LOGIN=true",
+        "--dart-define=DEMO_TOUR=true"
+      ]
+    }
+  ]
+}

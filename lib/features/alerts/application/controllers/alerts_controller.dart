@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../auth/application/controllers/session_controller.dart';
 import '../../domain/entities/alert.dart';
+import '../../domain/entities/incident.dart';
+import '../../domain/entities/notification.dart';
 import '../../domain/repositories/alert_repository.dart';
 
 enum AlertStatusFilter {
@@ -14,13 +16,13 @@ enum AlertStatusFilter {
   String get label {
     switch (this) {
       case AlertStatusFilter.all:
-        return 'All';
+        return 'Todas';
       case AlertStatusFilter.open:
-        return 'Open';
+        return 'Abiertas';
       case AlertStatusFilter.acknowledged:
-        return 'Acknowledged';
+        return 'Reconocidas';
       case AlertStatusFilter.resolved:
-        return 'Resolved';
+        return 'Resueltas';
     }
   }
 
@@ -48,13 +50,18 @@ class AlertsController extends ChangeNotifier {
   final SessionController sessionController;
 
   List<Alert> _alerts = const [];
+  Alert? _selectedAlert;
+  List<Incident> _incidents = const [];
+  List<AlertNotification> _notifications = const [];
   bool _isLoading = false;
+  bool _isLoadingDetail = false;
   String? _errorMessage;
   String _searchQuery = '';
   AlertStatusFilter _statusFilter = AlertStatusFilter.all;
   final Set<String> _resolvingIds = <String>{};
 
   bool get isLoading => _isLoading;
+  bool get isLoadingDetail => _isLoadingDetail;
   String? get errorMessage => _errorMessage;
   String get searchQuery => _searchQuery;
   AlertStatusFilter get statusFilter => _statusFilter;
@@ -67,6 +74,19 @@ class AlertsController extends ChangeNotifier {
       _alerts.where((alert) => alert.status == AlertStatus.closed).length;
 
   bool isResolving(String alertId) => _resolvingIds.contains(alertId);
+
+  bool hasLoadedDetail(String alertId) => _selectedAlert?.id == alertId;
+
+  List<Incident> get incidents => _incidents;
+  List<AlertNotification> get notifications => _notifications;
+
+  Alert alertById(String alertId) {
+    if (_selectedAlert?.id == alertId) {
+      return _selectedAlert!;
+    }
+
+    return allAlertById(alertId);
+  }
 
   Alert allAlertById(String alertId) {
     return _alerts.firstWhere(
@@ -127,9 +147,75 @@ class AlertsController extends ChangeNotifier {
     } on AppException catch (exception) {
       _errorMessage = exception.message;
     } on Exception {
-      _errorMessage = 'Unable to load alerts from the current backend.';
+      _errorMessage = 'No se pudieron cargar las alertas desde el backend.';
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadAlertDetail(String alertId) async {
+    final session = sessionController.session;
+    if (session == null || _isLoadingDetail) {
+      return;
+    }
+
+    _isLoadingDetail = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final results = await Future.wait([
+        alertRepository.getAlert(
+          accessToken: session.accessToken,
+          alertId: alertId,
+        ),
+        alertRepository.listIncidentsByAlert(
+          accessToken: session.accessToken,
+          alertId: alertId,
+        ),
+        alertRepository.listNotificationsByAlert(
+          accessToken: session.accessToken,
+          alertId: alertId,
+        ),
+      ]);
+
+      _selectedAlert = results[0] as Alert;
+      _incidents = results[1] as List<Incident>;
+      _notifications = results[2] as List<AlertNotification>;
+      _replaceAlert(_selectedAlert!);
+    } on AppException catch (exception) {
+      _errorMessage = exception.message;
+    } on Exception {
+      _errorMessage = 'No se pudieron cargar los detalles de la alerta desde el backend.';
+    } finally {
+      _isLoadingDetail = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> acknowledge(String alertId) async {
+    final session = sessionController.session;
+    if (session == null || _resolvingIds.contains(alertId)) {
+      return false;
+    }
+
+    _resolvingIds.add(alertId);
+    notifyListeners();
+
+    try {
+      final updated = await alertRepository.acknowledgeAlert(
+        accessToken: session.accessToken,
+        alertId: alertId,
+      );
+      _selectedAlert = updated;
+      _replaceAlert(updated);
+      return true;
+    } on AppException catch (exception) {
+      _errorMessage = exception.message;
+      return false;
+    } finally {
+      _resolvingIds.remove(alertId);
       notifyListeners();
     }
   }
@@ -148,6 +234,7 @@ class AlertsController extends ChangeNotifier {
         accessToken: session.accessToken,
         alertId: alertId,
       );
+      _selectedAlert = updated;
       _replaceAlert(updated);
       return true;
     } on AppException catch (exception) {

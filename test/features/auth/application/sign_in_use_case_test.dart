@@ -91,5 +91,17 @@ class _FakeAuthRepository implements AuthRepository {
   }) async {}
 
   @override
-  Future<void> signOut() async {}
+  Future<AuthSession> refreshSession({
+    required AuthSession currentSession,
+  }) async =>
+      currentSession;
+
+  @override
+  Future<void> signOut({String? refreshToken}) async {}
+
+  @override
+  Future<void> signOutAll({
+    required String accessToken,
+    required String userId,
+  }) async {}
 }

@@ -1,3 +1,4 @@
+import '../../../../core/utils/json_parse.dart';
 import '../../domain/entities/home_dashboard.dart';
 
 class HomeDashboardModel {
@@ -47,6 +48,8 @@ class HomeTripModel {
     this.driverId,
     this.deviceId,
     this.vehicleId,
+    this.originPointId,
+    this.trackingCode,
     this.originPointName,
     this.originPointAddress,
     this.createdAt,
@@ -67,6 +70,8 @@ class HomeTripModel {
       driverId: _nullableStringValue(map['driverId']),
       deviceId: _nullableStringValue(map['deviceId']),
       vehicleId: _nullableStringValue(map['vehicleId']),
+      originPointId: _nullableStringValue(map['originPointId']),
+      trackingCode: _nullableStringValue(map['trackingCode']),
       status: _stringValue(map['status']).toUpperCase(),
       originPointName: _nullableStringValue(originPoint['name']),
       originPointAddress: _nullableStringValue(originPoint['address']),
@@ -87,6 +92,8 @@ class HomeTripModel {
   final String? driverId;
   final String? deviceId;
   final String? vehicleId;
+  final String? originPointId;
+  final String? trackingCode;
   final String status;
   final String? originPointName;
   final String? originPointAddress;
@@ -102,6 +109,8 @@ class HomeTripModel {
       driverId: driverId,
       deviceId: deviceId,
       vehicleId: vehicleId,
+      originPointId: originPointId,
+      trackingCode: trackingCode,
       status: status,
       originPointName: originPointName,
       originPointAddress: originPointAddress,
@@ -172,8 +181,8 @@ class HomeAlertModel {
     return HomeAlertModel(
       id: _stringValue(map['id']),
       deliveryOrderId: _nullableStringValue(map['deliveryOrderId']),
-      type: _stringValue(map['alertType']).toUpperCase(),
-      status: _stringValue(map['alertStatus']).toUpperCase(),
+      type: _stringValue(map['alertType'] ?? map['type']).toUpperCase(),
+      status: _stringValue(map['alertStatus'] ?? map['status']).toUpperCase(),
       createdAt: _dateValue(map['createdAt']),
       updatedAt: _dateValue(map['updatedAt']),
     );
@@ -216,7 +225,7 @@ class HomeVehicleModel {
       plate: _stringValue(map['plate']),
       type: _stringValue(map['type']).toUpperCase(),
       status: _stringValue(map['status']).toUpperCase(),
-      odometerKm: map['odometerKm'] as num?,
+      odometerKm: nullableNumValue(map['odometerKm']),
       deviceImeis: rawDeviceImeis is List
           ? rawDeviceImeis
               .map((value) => _nullableStringValue(value))
