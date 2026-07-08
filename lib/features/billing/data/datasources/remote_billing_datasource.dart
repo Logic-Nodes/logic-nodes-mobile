@@ -104,13 +104,13 @@ class RemoteBillingDatasource {
     if (value is List) {
       return value.cast<Object?>();
     }
-    throw AppException('Unexpected response received from $source.');
+    throw AppException('Respuesta inesperada del servidor.');
   }
 
   Map<String, dynamic> _expectMap(Object? value, String source) {
     if (value is Map<String, dynamic>) {
       return value;
     }
-    throw AppException('Unexpected response received from $source.');
+    throw AppException('Respuesta inesperada del servidor.');
   }
 }

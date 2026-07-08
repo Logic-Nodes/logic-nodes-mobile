@@ -165,9 +165,9 @@ class ApiClient {
         _ => throw UnsupportedError('HTTP method $method is not supported.'),
       };
     } on TimeoutException {
-      throw AppException('The request to $uri timed out.');
+      throw AppException('La solicitud excedió el tiempo de espera.');
     } on Exception catch (exception) {
-      throw AppException('Unable to reach $uri. $exception');
+      throw AppException('No se pudo conectar con el servidor. $exception');
     }
 
     if (response.statusCode == 401 &&
@@ -192,7 +192,7 @@ class ApiClient {
 
     if (!expectedStatusCodes.contains(response.statusCode)) {
       final message = _extractErrorMessage(responseBody) ??
-          'Request failed with status ${response.statusCode}.';
+          'La solicitud falló con el código ${response.statusCode}.';
       throw ApiException(
         message,
         statusCode: response.statusCode,

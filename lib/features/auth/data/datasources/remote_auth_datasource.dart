@@ -60,7 +60,7 @@ class RemoteAuthDatasource {
     } on ApiException catch (exception) {
       if (exception.statusCode == 401) {
         throw const AuthException(
-          'Authentication failed. Check your credentials and try again.',
+          'No se pudo autenticar. Revisa tus credenciales e inténtalo de nuevo.',
         );
       }
 
@@ -223,8 +223,8 @@ class RemoteAuthDatasource {
     final resetToken = _lastResetToken;
     if (resetToken == null) {
       throw const AuthException(
-        'We could not match that email to an account. Request the recovery '
-        'instructions again to continue.',
+        'No encontramos una cuenta con ese correo. Vuelve a solicitar las '
+        'instrucciones de recuperación para continuar.',
       );
     }
 
@@ -352,7 +352,7 @@ class RemoteAuthDatasource {
       return value;
     }
 
-    throw AuthException('Unexpected response received from $source.');
+    throw AuthException('Respuesta inesperada del servidor.');
   }
 
   String _expectString(Object? value, String fieldName) {

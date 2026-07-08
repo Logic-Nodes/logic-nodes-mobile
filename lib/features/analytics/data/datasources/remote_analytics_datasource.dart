@@ -146,7 +146,7 @@ class RemoteAnalyticsDatasource {
 
     final tripMap = results[0];
     if (tripMap == null) {
-      throw AppException('Trip not found.');
+      throw AppException('Viaje no encontrado.');
     }
 
     final trip = HomeTripModel.fromMap(_expectMap(tripMap, 'trip'));
@@ -348,14 +348,14 @@ class RemoteAnalyticsDatasource {
     if (value is List) {
       return value.cast<Object?>();
     }
-    throw AppException('Unexpected response received from $source.');
+    throw AppException('Respuesta inesperada del servidor.');
   }
 
   Map<String, dynamic> _expectMap(Object? value, String source) {
     if (value is Map<String, dynamic>) {
       return value;
     }
-    throw AppException('Unexpected response received from $source.');
+    throw AppException('Respuesta inesperada del servidor.');
   }
 
   Map<String, dynamic> _asMap(Object? value) {

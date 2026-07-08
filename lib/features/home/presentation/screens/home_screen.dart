@@ -1452,7 +1452,7 @@ class _LoadingState extends StatelessWidget {
         children: [
           CircularProgressIndicator(),
           SizedBox(height: AppSpacing.md),
-          Text('Loading workspace data...'),
+          Text('Cargando datos del espacio de trabajo...'),
         ],
       ),
     );
@@ -1494,7 +1494,7 @@ class _ErrorState extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: onRetry,
                   icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('Retry'),
+                  label: const Text('Reintentar'),
                 ),
               ],
             ),

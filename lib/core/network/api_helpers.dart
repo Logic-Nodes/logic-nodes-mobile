@@ -18,7 +18,7 @@ List<Object?> expectList(Object? value, String source) {
     }
   }
 
-  throw AppException('Unexpected response received from $source.');
+  throw AppException('Respuesta inesperada del servidor.');
 }
 
 Map<String, dynamic> expectMap(Object? value, String source) {
@@ -33,7 +33,7 @@ Map<String, dynamic> expectMap(Object? value, String source) {
     }
   }
 
-  throw AppException('Unexpected response received from $source.');
+  throw AppException('Respuesta inesperada del servidor.');
 }
 
 Map<String, dynamic> expectItem(Object? value, String source) {
